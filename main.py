@@ -1,6 +1,5 @@
-def foo() -> None:
-    print(foo)
+from cli import cli
 
 
 if __name__ == "__main__":
-    foo()
+    cli()
