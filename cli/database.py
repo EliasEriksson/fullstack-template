@@ -1,13 +1,14 @@
 import click
+import database
 
 cli = click.Group("database")
 
 
 @cli.command()
 def create():
-    pass
+    database.models.Base.metadata.create_all(database.engine)
 
 
 @cli.command()
 def delete():
-    pass
+    database.models.Base.metadata.drop_all(database.engine)
