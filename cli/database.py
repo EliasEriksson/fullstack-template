@@ -6,9 +6,9 @@ cli = click.Group("database")
 
 @cli.command()
 def create():
-    database.models.Base.metadata.create_all(database.engine)
+    database.create()
 
 
 @cli.command()
 def delete():
-    database.models.Base.metadata.drop_all(database.engine)
+    database.delete()

@@ -1,3 +1,3 @@
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 
-engine = create_engine("sqlite+pysqlite:///database.sqlite", echo=True)
+engine = create_async_engine("sqlite+aiosqlite:///database.sqlite", echo=True)

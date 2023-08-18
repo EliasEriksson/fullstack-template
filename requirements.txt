@@ -12,6 +12,7 @@ httpcore==0.17.3
 httptools==0.6.0
 httpx==0.24.1
 idna==3.4
+iniconfig==2.0.0
 Jinja2==3.1.2
 jsbeautifier==1.14.9
 litestar==2.0.0rc1
@@ -24,8 +25,11 @@ mypy-extensions==1.0.0
 packaging==23.1
 pathspec==0.11.2
 platformdirs==3.10.0
+pluggy==1.2.0
 polyfactory==2.7.1
 Pygments==2.16.1
+pytest==7.4.0
+pytest-asyncio==0.21.1
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 PyYAML==6.0.1
