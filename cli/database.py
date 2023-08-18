@@ -1,14 +1,15 @@
 import click
 import database
+import asyncio
 
 cli = click.Group("database")
 
 
 @cli.command()
 def create():
-    database.create()
+    asyncio.run(database.create())
 
 
 @cli.command()
 def delete():
-    database.delete()
+    asyncio.run(database.delete())

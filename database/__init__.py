@@ -3,8 +3,10 @@ from .engine import engine
 
 
 async def create() -> None:
-    models.Base.metadata.create_all(engine)
+    async with engine.begin() as connection:
+        await connection.run_sync(models.Base.metadata.create_all)
 
 
-def delete() -> None:
-    models.Base.metadata.drop_all(engine)
+async def delete() -> None:
+    async with engine.begin() as connection:
+        await connection.run_sync(models.Base.metadata.drop_all)
