@@ -5,7 +5,10 @@ Playground for lite-star
 * implement postgres
   * change uuid id to server default 
   * setup database tests to be able to use postgres
-  * setup CI to be able to use postgres [more reading...](https://medium.com/qest/database-for-ci-cd-tests-quickly-and-inexpensively-96e3116ce72f)
+    * dynamic connection string
+  * setup CI to be able to use postgres 
+    * [more reading...](https://medium.com/qest/database-for-ci-cd-tests-quickly-and-inexpensively-96e3116ce72f)
+    * [even more reading...](https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers)
 * database abstraction
 * lite-start hello world
 * storing passwords
