@@ -2,6 +2,7 @@
 Playground for lite-star
 
 ## TODO
+* install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
 * implement postgres
   * change uuid id to server default 
   * setup database tests to be able to use postgres
