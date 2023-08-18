@@ -3,6 +3,7 @@ Playground for lite-star
 
 ## TODO
 * install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
+  * call from cli script [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
 * implement postgres
   * change uuid id to server default 
   * setup database tests to be able to use postgres
@@ -12,6 +13,7 @@ Playground for lite-star
     * [even more reading...](https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers)
 * database abstraction
 * lite-start hello world
+* logging
 * storing passwords
 * authentication
 * issue JWTs
