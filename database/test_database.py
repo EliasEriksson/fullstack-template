@@ -22,7 +22,6 @@ async def database():
         database = Database()
     except ConfigurationError:
         database = Database(environment)
-    print("USED URL", f"'{database.url}'")
     await create(database)
     yield database
     await delete(database)

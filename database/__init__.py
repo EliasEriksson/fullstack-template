@@ -11,24 +11,18 @@ import os
 class Database(Configuration):
     engine: AsyncEngine
     session: async_sessionmaker[AsyncSession]
-    url: str
 
     def __init__(self, environment: dict[str, str] = os.environ) -> None:
         super().__init__(environment)
         username = self.string("POSTGRES_USERNAME")
-        print("username", username)
         password = self.string("POSTGRES_PASSWORD")
-        print("password", password)
         database = self.string("POSTGRES_DATABASE")
-        print("database", database)
         host = self.string("POSTGRES_HOST")
-        print("host", host)
         port = self.integer("POSTGRES_PORT")
-        print("port", port)
-        url = f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}"
-        print("partial url", url[3:20])
-        self.url = url
-        self.engine = create_async_engine(url)
+        self.engine = create_async_engine(
+            f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}",
+            echo=True,
+        )
         self.session = async_sessionmaker(self.engine, expire_on_commit=False)
 
 
