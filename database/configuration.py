@@ -35,7 +35,7 @@ class ConfigurationValueError(ConfigurationError):
 
 
 class Configuration(metaclass=Meta):
-    environment: dict[str, str]
+    _environment: dict[str, str]
     username: str
     password: str
     database: str
@@ -43,7 +43,7 @@ class Configuration(metaclass=Meta):
     port: int
 
     def __init__(self, environment: dict[str, str] = os.environ) -> None:
-        self.environment = environment
+        self._environment = environment
         self.username = self.string("POSTGRES_USERNAME")
         self.password = self.string("POSTGRES_PASSWORD")
         self.database = self.string("POSTGRES_DATABASE")
@@ -62,6 +62,6 @@ class Configuration(metaclass=Meta):
 
     def get(self, variable: str) -> str:
         try:
-            return self.environment[variable]
+            return self._environment[variable]
         except KeyError:
             raise ConfigurationMissingVariable(variable)
