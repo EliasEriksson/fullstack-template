@@ -19,10 +19,9 @@ class Database(Configuration):
         database = self.string("POSTGRES_DATABASE")
         host = self.string("POSTGRES_HOST")
         port = self.integer("POSTGRES_PORT")
-        self.engine = create_async_engine(
-            f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}",
-            echo=True,
-        )
+        url = f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}"
+        print("USED URL", url)
+        self.engine = create_async_engine(url, echo=True)
         self.session = async_sessionmaker(self.engine, expire_on_commit=False)
 
 
