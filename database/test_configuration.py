@@ -10,9 +10,9 @@ async def test_missing_variable():
     except ConfigurationMissingVariable:
         pass
     environment = {
-        "POSTGRES_USERNAME": "lite-star-u",
-        "POSTGRES_PASSWORD": "lite-star-p",
-        "POSTGRES_DATABASE": "lite-star-d",
+        "POSTGRES_USERNAME": "lite-star",
+        "POSTGRES_PASSWORD": "lite-star",
+        "POSTGRES_DATABASE": "lite-star-test",
         "POSTGRES_HOST": "localhost",
         "POSTGRES_PORT": "garbage",
     }

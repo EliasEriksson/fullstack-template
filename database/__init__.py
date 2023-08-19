@@ -12,7 +12,7 @@ class Database(Configuration):
     engine: AsyncEngine
     session: async_sessionmaker[AsyncSession]
 
-    def __init__(self, environment: dict[str, str] = os.environ) -> None:
+    def __init__(self, environment: Optional[dict[str, str]] = None) -> None:
         super().__init__(environment)
         username = self.string("POSTGRES_USERNAME")
         password = self.string("POSTGRES_PASSWORD")
@@ -25,14 +25,10 @@ class Database(Configuration):
         )
         self.session = async_sessionmaker(self.engine, expire_on_commit=False)
 
+    async def create(self) -> None:
+        async with self.engine.begin() as connection:
+            await connection.run_sync(models.Base.metadata.create_all)
 
-async def create(database: Optional[Database]) -> None:
-    database = database if database is not None else Database()
-    async with database.engine.begin() as connection:
-        await connection.run_sync(models.Base.metadata.create_all)
-
-
-async def delete(database: Optional[Database]) -> None:
-    database = database if database is not None else Database()
-    async with database.engine.begin() as connection:
-        await connection.run_sync(models.Base.metadata.drop_all)
+    async def delete(self) -> None:
+        async with self.engine.begin() as connection:
+            await connection.run_sync(models.Base.metadata.drop_all)

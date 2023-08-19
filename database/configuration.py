@@ -1,3 +1,4 @@
+from typing import *
 import os
 
 
@@ -37,8 +38,12 @@ class ConfigurationValueError(ConfigurationError):
 class Configuration(metaclass=Meta):
     _environment: dict[str, str]
 
-    def __init__(self, environment: dict[str, str] = os.environ) -> None:
-        self._environment = environment
+    def __init__(self, environment: Optional[dict[str, str]] = None) -> None:
+        environment = environment if environment is not None else {}
+        self._environment = {
+            **os.environ,
+            **environment,
+        }
 
     def string(self, variable: str) -> str:
         return self.get(variable)

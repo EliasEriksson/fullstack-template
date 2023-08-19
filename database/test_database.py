@@ -1,30 +1,35 @@
 import asyncio
 
 import pytest
-from . import create
-from . import delete
 from . import models
 from sqlalchemy import select
 from . import Database
 from .configuration import ConfigurationError
+import os
 
 
 @pytest.fixture
 async def database():
+    # this is ugly. load this value from test cli
     environment = {
-        "POSTGRES_USERNAME": "lite-star",
-        "POSTGRES_PASSWORD": "lite-star",
-        "POSTGRES_DATABASE": "lite-star-test",
-        "POSTGRES_HOST": "localhost",
-        "POSTGRES_PORT": "5432",
+        "POSTGRES_DATABASE": os.environ["POSTGRES_TEST_DATABASE"]
+        if "POSTGRES_TEST_DATABASE" in os.environ
+        else "lite-star-test",
     }
     try:
-        database = Database()
-    except ConfigurationError:
         database = Database(environment)
-    await create(database)
+    except ConfigurationError:
+        environment = {
+            **environment,
+            "POSTGRES_USERNAME": "lite-star",
+            "POSTGRES_PASSWORD": "lite-star",
+            "POSTGRES_HOST": "localhost",
+            "POSTGRES_PORT": "5432",
+        }
+        database = Database(environment)
+    await database.create()
     yield database
-    await delete(database)
+    await database.delete()
 
 
 async def test_user(database: Database) -> None:
