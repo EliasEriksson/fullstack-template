@@ -26,8 +26,9 @@ class Database(Configuration):
         port = self.integer("POSTGRES_PORT")
         print("port", port)
         url = f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}"
+        print("partial url", url[3:20])
         self.url = url
-        self.engine = create_async_engine(url, echo=True)
+        self.engine = create_async_engine(url)
         self.session = async_sessionmaker(self.engine, expire_on_commit=False)
 
 
