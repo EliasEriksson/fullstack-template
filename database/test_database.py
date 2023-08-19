@@ -6,6 +6,7 @@ from . import delete
 from . import models
 from sqlalchemy import select
 from . import Database
+from .configuration import ConfigurationError
 
 
 @pytest.fixture
@@ -17,7 +18,11 @@ async def database():
         "POSTGRES_HOST": "localhost",
         "POSTGRES_PORT": "5432",
     }
-    database = Database(environment)
+    try:
+        database = Database()
+    except ConfigurationError:
+        database = Database(environment)
+
     await create(database)
     yield database
     await delete(database)
