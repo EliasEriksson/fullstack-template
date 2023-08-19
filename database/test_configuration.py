@@ -21,4 +21,5 @@ async def test_missing_variable():
     except ConfigurationValueError:
         pass
     environment["POSTGRES_PORT"] = "5432"
-    Configuration(environment)
+    assert Configuration(environment) is Configuration()
+    assert Configuration(environment) is not Configuration(environment)
