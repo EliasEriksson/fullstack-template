@@ -8,6 +8,7 @@ from .configuration import Configuration
 import os
 
 
+# break out the configuration from here. it will be easier to modify the configuration between tests / cli
 class Database(Configuration):
     engine: AsyncEngine
     session: async_sessionmaker[AsyncSession]
