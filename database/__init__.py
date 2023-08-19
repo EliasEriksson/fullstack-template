@@ -16,10 +16,15 @@ class Database(Configuration):
     def __init__(self, environment: dict[str, str] = os.environ) -> None:
         super().__init__(environment)
         username = self.string("POSTGRES_USERNAME")
+        print("username", username)
         password = self.string("POSTGRES_PASSWORD")
+        print("password", password)
         database = self.string("POSTGRES_DATABASE")
+        print("database", database)
         host = self.string("POSTGRES_HOST")
+        print("host", host)
         port = self.integer("POSTGRES_PORT")
+        print("port", port)
         url = f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}"
         self.url = url
         self.engine = create_async_engine(url, echo=True)
