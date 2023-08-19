@@ -1,13 +1,14 @@
 from .singleton import Singleton
 
 
+class Implementation(metaclass=Singleton):
+    counter = 0
+
+    def __init__(self) -> None:
+        Implementation.counter += 1
+
+
 async def test_init_once() -> None:
-    class Implementation(metaclass=Singleton):
-        counter = 0
-
-        def __init__(self) -> None:
-            Implementation.counter += 1
-
     implementation = Implementation()
     implementations = [
         Implementation(),
