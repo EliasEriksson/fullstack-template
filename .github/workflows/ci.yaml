@@ -37,7 +37,7 @@ jobs:
         run: |
           python main.py test
         env:
-          POSTGRES_HOST: postgres
+          POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
           POSTGRES_USERNAME: postgres
           POSTGRES_PASSWORD: postgres
