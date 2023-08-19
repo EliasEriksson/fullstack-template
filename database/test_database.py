@@ -1,20 +1,30 @@
+import asyncio
+
 import pytest
 from . import create
 from . import delete
-from .session import Session
 from . import models
 from sqlalchemy import select
+from . import Database
 
 
 @pytest.fixture
-async def setup():
-    await create()
-    yield None
-    await delete()
+async def database():
+    environment = {
+        "POSTGRES_USERNAME": "lite-star",
+        "POSTGRES_PASSWORD": "lite-star",
+        "POSTGRES_DATABASE": "lite-star-test",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+    }
+    database = Database(environment)
+    await create(database)
+    yield database
+    await delete(database)
 
 
-async def test_user(setup: None) -> None:
-    async with Session() as session:
+async def test_user(database: Database) -> None:
+    async with database.session() as session:
         users = await session.execute(select(models.User))
         assert len(users.scalars().all()) == 0
         await session.commit()

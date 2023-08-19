@@ -23,10 +23,3 @@ async def test_missing_variable():
     environment["POSTGRES_PORT"] = "5432"
     assert Configuration(environment) is Configuration()
     assert Configuration(environment) is not Configuration(environment)
-    configuration = Configuration()
-
-    assert configuration.port == 5432
-    assert configuration.host == "localhost"
-    assert configuration.username == "lite-star-u"
-    assert configuration.password == "lite-star-p"
-    assert configuration.database == "lite-star-d"
