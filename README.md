@@ -49,8 +49,8 @@ If neither a command line argument nor an environment variable is present for a 
 ## TODO
 - [ ] install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
 - [ ] call alembic from cli script [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
-- [ ] implement postgres
-  - [ ] change uuid id to server default 
+- [x] implement postgres
+  - [x] change uuid id to server default 
   - [x] setup database tests to be able to use postgres
     * dynamic connection string
   - [x] setup CI to be able to use postgres 
