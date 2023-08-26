@@ -11,6 +11,7 @@ Playground for lite-star
 * [pytest-asyncio](https://pypi.org/project/pytest-asyncio/)
 * [psycopg](https://pypi.org/project/psycopg/)
 * [black](https://pypi.org/project/black/)
+* [alembic](https://pypi.org/project/alembic/)
 
 ## Setup
 ### Install non python dependencies
@@ -47,8 +48,6 @@ If neither a command line argument nor an environment variable is present for a 
   ```
   
 ## TODO
-- [ ] install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
-- [ ] call alembic from cli script [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
 - [x] implement postgres
   - [x] change uuid id to server default 
   - [x] setup database tests to be able to use postgres
@@ -56,6 +55,10 @@ If neither a command line argument nor an environment variable is present for a 
   - [x] setup CI to be able to use postgres 
     * [more reading...](https://medium.com/qest/database-for-ci-cd-tests-quickly-and-inexpensively-96e3116ce72f)
     * [even more reading...](https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers)
+- [ ] install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
+  - [ ] call alembic from cli script
+    - alembic internal commands api [docs](https://alembic.sqlalchemy.org/en/latest/api/commands.html)
+    - some [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
 - [ ] database abstraction
 - [ ] lite-start hello world
 - [ ] logging
