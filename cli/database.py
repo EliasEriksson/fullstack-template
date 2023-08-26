@@ -46,7 +46,6 @@ def database_credentials(function):
 @cli.command()
 @database_credentials
 def create(**options: str | int) -> None:
-    # options = {f"POSTGRES_{name.upper()}": value for name, value in options.items()}
     configuration = DatabaseConfiguration(options)
     database = Database(configuration)
     asyncio.run(database.create())

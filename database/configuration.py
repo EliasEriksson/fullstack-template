@@ -53,10 +53,15 @@ class Configuration(metaclass=Meta):
             return int(value)
         except ValueError:
             raise ConfigurationValueError(variable, value, "int")
+        except TypeError:
+            raise ConfigurationMissingVariable(variable)
 
     def _get(self, variable: str) -> str:
         try:
-            return self._environment[variable]
+            value = self._environment[variable]
+            if value is None:
+                raise KeyError
+            return value
         except KeyError:
             raise ConfigurationMissingVariable(variable)
 
@@ -102,6 +107,4 @@ class DatabaseConfiguration(Configuration):
 
     @property
     def url(self):
-        return (
-            f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}",
-        )
+        return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
