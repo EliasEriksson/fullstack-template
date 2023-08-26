@@ -36,7 +36,7 @@ python -m pip install -r requirements_dev.txt
 
 ### Initialize the database
 Database credentials can be given by either supplying environment variables or command line arguments. 
-If neither an argument nor an environment variable is present for a value a default will be used.
+If neither a command line argument nor an environment variable is present for a value a default will be used.
 * Command line arguments using default values
   ```bash
   ./main.py database create --username lite-star --password lite-star --database lite-star --host localhost --port 5432
