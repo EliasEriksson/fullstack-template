@@ -1,6 +1,17 @@
 # lite-star
 Playground for lite-star
 
+## Dependencies
+### Non Python dependencies
+* [postgresql](https://www.postgresql.org/)
+### Python dependencies (excluding peer dependencies):
+* [click](https://pypi.org/project/click/)
+* [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)
+* [pytest](https://pypi.org/project/pytest/)
+* [pytest-asyncio](https://pypi.org/project/pytest-asyncio/)
+* [psycopg](https://pypi.org/project/psycopg/)
+* [black](https://pypi.org/project/black/)
+
 ## Setup
 ### Install non python dependencies
 * [postgresql](https://www.postgresql.org/download/)
@@ -15,12 +26,12 @@ GRANT ALL PRIVILEGES ON DATABASE "lite-star" to "lite-star";
 GRANT ALL PRIVILEGES ON DATABASE "lite-star-test" to "lite-star";
 ```
 
-### Virtual environment
-Creates a python virtual environment and installs python dependencies 
+### Installing python dependencies in virtual environment
+Create a python virtual environment and install python dependencies 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements_dev.txt
 ```
 
 ### Initialize the database
