@@ -99,3 +99,9 @@ class DatabaseConfiguration(Configuration):
             return self._integer("POSTGRES_PORT")
         except ConfigurationMissingVariable:
             return "5432"
+
+    @property
+    def url(self):
+        return (
+            f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}",
+        )

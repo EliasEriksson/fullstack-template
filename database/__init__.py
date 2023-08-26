@@ -15,15 +15,7 @@ class Database:
         self._configuration = (
             configuration if configuration is not None else DatabaseConfiguration()
         )
-        username = self._configuration.username
-        password = self._configuration.password
-        database = self._configuration.database
-        host = self._configuration.host
-        port = self._configuration.port
-        self._engine = create_async_engine(
-            f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}",
-            echo=True,
-        )
+        self._engine = create_async_engine(self._configuration.url, echo=True)
         self._session = async_sessionmaker(self._engine, expire_on_commit=False)
 
     async def create(self) -> None:
