@@ -1,29 +1,32 @@
 import click
 from database import Database
+from database import DatabaseConfiguration
 import asyncio
 
 cli = click.Group("database")
 
-# probably revert this. only environment variables!
+
 @cli.command()
-@click.option("--username", "-u", default="lite-star")
-@click.option("--password", "-p", default="lite-star")
-@click.option("--host", "-h", default="localhost")
-@click.option("--port", "-P", default="5432")
-@click.option("--database", "-d", default="lite-star")
+@click.option("--username", "-u")
+@click.option("--password", "-p")
+@click.option("--host", "-h")
+@click.option("--port", "-P")
+@click.option("--database", "-d")
 def create(**options: str) -> None:
     options = {f"POSTGRES_{name.upper()}": value for name, value in options.items()}
-    database = Database(options)
+    configuration = DatabaseConfiguration(options)
+    database = Database(configuration)
     asyncio.run(database.create())
 
 
 @cli.command()
-@click.option("--username", "-u", default="lite-star")
-@click.option("--password", "-p", default="lite-star")
-@click.option("--host", "-h", default="localhost")
-@click.option("--port", "-P", default="5432")
-@click.option("--database", "-d", default="lite-star")
+@click.option("--username", "-u")
+@click.option("--password", "-p")
+@click.option("--host", "-h")
+@click.option("--port", "-P")
+@click.option("--database", "-d")
 def delete(**options) -> None:
     options = {f"POSTGRES_{name.upper()}": value for name, value in options.items()}
-    database = Database(options)
+    configuration = DatabaseConfiguration(options)
+    database = Database(configuration)
     asyncio.run(database.delete())

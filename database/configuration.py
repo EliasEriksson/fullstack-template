@@ -1,4 +1,3 @@
-from typing import *
 import os
 
 
@@ -38,25 +37,65 @@ class ConfigurationValueError(ConfigurationError):
 class Configuration(metaclass=Meta):
     _environment: dict[str, str]
 
-    def __init__(self, environment: Optional[dict[str, str]] = None) -> None:
+    def __init__(self, environment: dict[str, str] | None = None) -> None:
         environment = environment if environment is not None else {}
         self._environment = {
-            **os.environ,
             **environment,
+            **os.environ,
         }
 
-    def string(self, variable: str) -> str:
-        return self.get(variable)
+    def _string(self, variable: str) -> str:
+        return self._get(variable)
 
-    def integer(self, variable: str) -> int:
-        value = self.get(variable)
+    def _integer(self, variable: str) -> int:
+        value = self._get(variable)
         try:
             return int(value)
         except ValueError:
             raise ConfigurationValueError(variable, value, "int")
 
-    def get(self, variable: str) -> str:
+    def _get(self, variable: str) -> str:
         try:
             return self._environment[variable]
         except KeyError:
             raise ConfigurationMissingVariable(variable)
+
+
+class DatabaseConfiguration(Configuration):
+    def __init__(self, environment: dict[str, str] | None = None) -> None:
+        super().__init__(environment)
+
+    @property
+    def username(self) -> str:
+        try:
+            return self._string("POSTGRES_USERNAME")
+        except ConfigurationMissingVariable:
+            return "lite-star"
+
+    @property
+    def password(self) -> str:
+        try:
+            return self._string("POSTGRES_PASSWORD")
+        except ConfigurationMissingVariable:
+            return "lite-star"
+
+    @property
+    def database(self):
+        try:
+            return self._string("POSTGRES_DATABASE")
+        except ConfigurationMissingVariable:
+            return "lite-star"
+
+    @property
+    def host(self):
+        try:
+            return self._string("POSTGRES_HOST")
+        except ConfigurationMissingVariable:
+            return "localhost"
+
+    @property
+    def port(self):
+        try:
+            return self._integer("POSTGRES_PORT")
+        except ConfigurationMissingVariable:
+            return "5432"
