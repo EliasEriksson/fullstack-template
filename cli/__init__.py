@@ -12,11 +12,14 @@ cli.add_command(database.cli)
 
 
 @cli.command()
-@click.option("--username", "-u")
-@click.option("--password", "-p")
-@click.option("--host", "-h")
-@click.option("--port", "-P")
-@click.option("--database", "-d", default="lite-star-test")
+@database.database_credentials
+@click.option(
+    "--database",
+    "-d",
+    default="lite-star-test",
+    type=str,
+    help="Postgres database name.",
+)
 def test(**options: str):
     options = {
         f"POSTGRES_{name.upper()}": value

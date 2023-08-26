@@ -2,7 +2,7 @@
 Playground for lite-star
 
 ## Setup
-### Non python dependencies
+### Install non python dependencies
 * [postgresql](https://www.postgresql.org/download/)
 ### Configure postgres user
 create the lite-star user and database
@@ -14,6 +14,7 @@ CREATE USER "lite-star" WITH ENCRYPTED PASSWORD 'lite-star';
 GRANT ALL PRIVILEGES ON DATABASE "lite-star" to "lite-star";
 GRANT ALL PRIVILEGES ON DATABASE "lite-star-test" to "lite-star";
 ```
+
 ### Virtual environment
 Creates a python virtual environment and installs python dependencies 
 ```bash
@@ -21,20 +22,19 @@ python3 -m venv venv
 source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
-### Initialize the database
-Database credentials can be given by either supplying environment variables or command line options. 
 
-* Command line arguments
+### Initialize the database
+Database credentials can be given by either supplying environment variables or command line arguments. 
+If neither an argument nor an environment variable is present for a value a default will be used.
+* Command line arguments using default values
   ```bash
-  ./main.py database create 
+  ./main.py database create --username lite-star --password lite-star --database lite-star --host localhost --port 5432
   ```
-* Environment variables
+* Environment variables using default values
   ```bash
+  export POSTGRES_USERNAME=lite-star POSTGRES_PASSWORD=lite-star POSTGRES_DATABASE=lite-star POSTGRES_HOST=localhost POSTGRES_PORT=5432 && ./main.py
+  ```
   
-  ```
-If an option is omitted a default will be used in its place. 
-Defaults:
-* 
 ## TODO
 - [ ] install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
 - [ ] call alembic from cli script [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
