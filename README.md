@@ -54,14 +54,14 @@ extra configuration.
 Always prefer to use this projects CLI over alembics. If support for something from alembic is missing in this CLi
 try to implement support for it rather than calling alembic manually.
 1. Create a new alembic revision.
-  ```bash
-  python main.py database revision -m "This is an optional message"
-  ```
+   ```bash
+   python main.py database revision -m "This is an optional message"
+   ```
 2. make sure that the revision created in `./migrations/versions` is correct.
 3. Apply the revision
-  ```bash
-  python main.py database migrate
-  ```
+   ```bash
+   python main.py database migrate
+   ```
 
 ## TODO
 - [x] implement postgres
