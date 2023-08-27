@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from alembic.config import Config as AlembicConfiguration
 
 
 class Meta(type):
@@ -34,6 +36,15 @@ class ConfigurationValueError(ConfigurationError):
         )
 
 
+class AlembicMigrationsNotFound(ConfigurationError):
+    def __init__(self, path: Path) -> None:
+        message = (
+            f"Alembic migrations could not be found at location '{path.absolute()}'. "
+            f"alembic.ini is either misconfigured or migrations directory is misplaced."
+        )
+        super().__init__(message)
+
+
 class Configuration(metaclass=Meta):
     _environment: dict[str, str]
 
@@ -53,17 +64,40 @@ class Configuration(metaclass=Meta):
             return int(value)
         except ValueError:
             raise ConfigurationValueError(variable, value, "int")
+        except TypeError:
+            raise ConfigurationMissingVariable(variable)
 
     def _get(self, variable: str) -> str:
         try:
-            return self._environment[variable]
+            value = self._environment[variable]
+            if value is None:
+                raise KeyError
+            return value
         except KeyError:
             raise ConfigurationMissingVariable(variable)
 
 
 class DatabaseConfiguration(Configuration):
-    def __init__(self, environment: dict[str, str] | None = None) -> None:
+    migrations: Path
+    alembic: AlembicConfiguration
+
+    def __init__(
+        self,
+        environment: dict[str, str] | None = None,
+        alembic: AlembicConfiguration | None = None,
+    ) -> None:
         super().__init__(environment)
+        self.alembic = (
+            alembic if alembic is not None else AlembicConfiguration("./alembic.ini")
+        )
+
+        self.migrations = Path(
+            self.alembic.get_main_option("script_location")
+        ).joinpath("versions")
+        try:
+            self.migrations.mkdir(exist_ok=True)
+        except FileNotFoundError:
+            raise AlembicMigrationsNotFound(self.migrations)
 
     @property
     def username(self) -> str:
@@ -99,3 +133,7 @@ class DatabaseConfiguration(Configuration):
             return self._integer("POSTGRES_PORT")
         except ConfigurationMissingVariable:
             return "5432"
+
+    @property
+    def url(self):
+        return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"

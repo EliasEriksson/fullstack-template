@@ -16,18 +16,12 @@ cli.add_command(database.cli)
 @click.option(
     "--database",
     "-d",
+    "POSTGRES_DATABASE",
     default="lite-star-test",
     type=str,
     help="Postgres database name.",
 )
-def test(**options: str):
-    options = {
-        f"POSTGRES_{name.upper()}": value
-        for name, value in options.items()
-        if value is not None
-    }
-    database.DatabaseConfiguration(options)
-    return_code = pytest.main(
-        ["--asyncio-mode", "auto"],
-    )
+def test(**credentials: str):
+    database.DatabaseConfiguration(credentials)
+    return_code = pytest.main(["--asyncio-mode", "auto"])
     sys.exit(return_code)

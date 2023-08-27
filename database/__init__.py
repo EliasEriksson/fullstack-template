@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import text
 from . import models
 from .configuration import DatabaseConfiguration
 
@@ -15,15 +16,7 @@ class Database:
         self._configuration = (
             configuration if configuration is not None else DatabaseConfiguration()
         )
-        username = self._configuration.username
-        password = self._configuration.password
-        database = self._configuration.database
-        host = self._configuration.host
-        port = self._configuration.port
-        self._engine = create_async_engine(
-            f"postgresql+psycopg://{username}:{password}@{host}:{port}/{database}",
-            echo=True,
-        )
+        self._engine = create_async_engine(self._configuration.url, echo=True)
         self._session = async_sessionmaker(self._engine, expire_on_commit=False)
 
     async def create(self) -> None:
@@ -33,3 +26,11 @@ class Database:
     async def delete(self) -> None:
         async with self._engine.begin() as connection:
             await connection.run_sync(models.Base.metadata.drop_all)
+            drop_alembic = text(f"DROP TABLE IF EXISTS alembic_version;")
+            await connection.execute(drop_alembic)
+
+        migrations = self._configuration.migrations
+        if migrations.exists():
+            for content in migrations.iterdir():
+                if content.is_file():
+                    content.unlink()
