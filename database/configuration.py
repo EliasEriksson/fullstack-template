@@ -93,6 +93,7 @@ class DatabaseConfiguration(Configuration):
         self.migrations = Path(
             self.alembic.get_main_option("script_location")
         ).joinpath("versions")
+        print(f"migrations path in configuration init: '{self.migrations.absolute()}'")
         if not self.migrations.is_dir():
             raise AlembicMigrationsNotFound(self.migrations)
 
