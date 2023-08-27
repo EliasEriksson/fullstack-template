@@ -21,9 +21,7 @@ cli.add_command(database.cli)
     type=str,
     help="Postgres database name.",
 )
-def test(**options: str):
-    database.DatabaseConfiguration(options)
-    return_code = pytest.main(
-        ["--asyncio-mode", "auto"],
-    )
+def test(**credentials: str):
+    database.DatabaseConfiguration(credentials)
+    return_code = pytest.main(["--asyncio-mode", "auto"])
     sys.exit(return_code)

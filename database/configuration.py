@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from alembic.config import Config as AlembicConfiguration
 
 
 class Meta(type):
@@ -34,6 +36,15 @@ class ConfigurationValueError(ConfigurationError):
         )
 
 
+class AlembicMigrationsNotFound(ConfigurationError):
+    def __init__(self, path: Path) -> None:
+        message = (
+            f"Alembic migrations could not be found at location '{path.absolute()}'. "
+            f"alembic.ini is either misconfigured or migrations directory is misplaced."
+        )
+        super().__init__(message)
+
+
 class Configuration(metaclass=Meta):
     _environment: dict[str, str]
 
@@ -67,8 +78,23 @@ class Configuration(metaclass=Meta):
 
 
 class DatabaseConfiguration(Configuration):
-    def __init__(self, environment: dict[str, str] | None = None) -> None:
+    migrations: Path
+    alembic: AlembicConfiguration
+
+    def __init__(
+        self,
+        environment: dict[str, str] | None = None,
+        alembic: AlembicConfiguration | None = None,
+    ) -> None:
         super().__init__(environment)
+        self.alembic = (
+            alembic if alembic is not None else AlembicConfiguration("./alembic.ini")
+        )
+        self.migrations = Path(
+            self.alembic.get_main_option("script_location")
+        ).joinpath("versions")
+        if not self.migrations.is_dir():
+            raise AlembicMigrationsNotFound(self.migrations)
 
     @property
     def username(self) -> str:

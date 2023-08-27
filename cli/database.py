@@ -3,7 +3,6 @@ from database import Database
 from database import DatabaseConfiguration
 import asyncio
 from functools import reduce
-from alembic.config import Config as AlembicConfiguration
 from alembic import command
 
 
@@ -63,34 +62,110 @@ def create(**credentials: str | int) -> None:
 @database_credentials
 def delete(**credentials: str | int) -> None:
     configuration = DatabaseConfiguration(credentials)
-    database = Database(configuration)
-    asyncio.run(database.delete())
+    message = (
+        f"This operation will delete all tables related to this "
+        f"application from the database '{configuration.database}'.\n"
+        f"OBS! This operation is irreversible.\n"
+        f"Are you sure you want to continue? (y/n): "
+    )
+    if input(message).lower() == "y":
+        print("Proceeding...")
+        database = Database(configuration)
+        asyncio.run(database.delete())
+    else:
+        print("Aborted.")
 
 
 @cli.command()
 @click.option("--message", "-m", type=str, help="Revision message", default=None)
 @database_credentials
 def revision(message: str | None, **credentials: str | int) -> None:
-    DatabaseConfiguration(credentials)
+    configuration = DatabaseConfiguration(credentials)
     command.revision(
-        AlembicConfiguration("./alembic.ini"),
+        configuration.alembic,
         autogenerate=True,
         message=message,
     )
 
 
-# merge these commands
 @cli.command()
-@click.argument("revision", type=str, help="Revision id.", default="head")
 @database_credentials
-def migrate(revision: str, **credentials: str | int) -> None:
-    DatabaseConfiguration(credentials)
-    command.upgrade(AlembicConfiguration("./alembic.ini"), revision)
+def migrate(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    for content in configuration.migrations.iterdir():
+        if content.is_file():
+            break
+    else:
+        command.revision(
+            configuration.alembic,
+            "Initializing database.",
+            autogenerate=True,
+        )
+    command.upgrade(configuration.alembic, "head")
 
 
 @cli.command()
-@click.argument("revision", type=str, help="alembic revision.", required=True)
+@click.argument("revision", type=str)
+@database_credentials
+def upgrade(revision: str, **credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.upgrade(configuration.alembic, revision)
+
+
+@cli.command()
+@click.argument("revision", type=str, required=True)
 @database_credentials
 def downgrade(revision: str, **credentials: str | int) -> None:
-    DatabaseConfiguration(credentials)
-    command.downgrade(AlembicConfiguration("./alembic.ini"), revision)
+    configuration = DatabaseConfiguration(credentials)
+    command.downgrade(configuration.alembic, revision)
+
+
+@cli.command()
+@database_credentials
+def heads(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.heads(configuration.alembic)
+
+
+@cli.command()
+@database_credentials
+def check(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.check(configuration.alembic)
+
+
+@cli.command()
+@database_credentials
+def branches(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.branches(configuration.alembic)
+
+
+@cli.command()
+@database_credentials
+def current(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.current(configuration.alembic)
+
+
+@cli.command()
+@database_credentials
+def ensure_version(**credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.ensure_version(configuration.alembic)
+
+
+@cli.command()
+@click.argument("revision", type=str, required=True)
+@database_credentials
+def show(revision: str, **credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.show(configuration.alembic, revision)
+
+
+@cli.command()
+@click.argument("revision", type=str, required=True)
+@database_credentials
+def stamp(revision: str, **credentials: str | int) -> None:
+    configuration = DatabaseConfiguration(credentials)
+    command.stamp(configuration.alembic, revision)
