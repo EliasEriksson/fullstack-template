@@ -32,7 +32,7 @@ Create a python virtual environment and install python dependencies
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-python -m pip install -r requirements_dev.txt
+python -m pip install -r requirements.txt
 ```
 
 ### Initialize the database
@@ -83,4 +83,7 @@ try to implement support for it rather than calling alembic manually.
 - [ ] issue JWTs
 - [ ] `GET /auth`
 - [ ] test `GET /auth`
+- [ ] use pypy?
+    * use h11 over httptools?
+    * other packages might need to change to be compatible
 - [ ] email verification?
