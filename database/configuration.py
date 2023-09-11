@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 from alembic.config import Config as AlembicConfiguration
+import shared
+
+from dataclasses import dataclass, fields, Field
 
 
 class Meta(type):
@@ -77,9 +80,19 @@ class Configuration(metaclass=Meta):
             raise ConfigurationMissingVariable(variable)
 
 
+class Variables(shared.Iterable):
+    username = "POSTGRES_USERNAME"
+    password = "POSTGRES_PASSWORD"
+    database = "POSTGRES_DATABASE"
+    host = "POSTGRES_HOST"
+    port = "POSTGRES_PORT"
+
+
 class DatabaseConfiguration(Configuration):
     migrations: Path
     alembic: AlembicConfiguration
+
+    variables = Variables()
 
     def __init__(
         self,
@@ -102,7 +115,7 @@ class DatabaseConfiguration(Configuration):
     @property
     def username(self) -> str:
         try:
-            return self._string("POSTGRES_USERNAME")
+            return self._string(self.variables["username"])
         except ConfigurationMissingVariable:
             return "lite-star"
 
