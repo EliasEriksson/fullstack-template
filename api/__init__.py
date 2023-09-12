@@ -12,8 +12,7 @@ from contextlib import asynccontextmanager
 @get("/")
 async def hello_world() -> str:
     database = DatabaseConfiguration()
-    print("env", os.environ["TESTING"])
-    # print(database.url)
+    print(database.url)
     return "Hello, world!"
 
 

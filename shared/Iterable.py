@@ -5,4 +5,4 @@ class Meta(type):
 
 class Iterable(metaclass=Meta):
     def __iter__(self):
-        return (getattr(self, key) for key in self.__dir__() if not key.startswith("_"))
+        return (getattr(self, key) for key in dir(self) if not key.startswith("_"))

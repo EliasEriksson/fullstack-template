@@ -1,9 +1,9 @@
 import click
 import sys
-import pytest
 from . import api
 from . import ui
 from . import database
+import subprocess
 
 cli = click.Group()
 cli.add_command(api.cli)
@@ -23,5 +23,5 @@ cli.add_command(database.cli)
 )
 def test(**credentials: str):
     database.DatabaseConfiguration(credentials)
-    return_code = pytest.main(["--asyncio-mode", "auto"])
+    return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
     sys.exit(return_code)
