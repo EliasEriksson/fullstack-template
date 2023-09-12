@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 from alembic.config import Config as AlembicConfiguration
+import shared
+
+from dataclasses import dataclass, fields, Field
 
 
 class Meta(type):
@@ -46,9 +49,9 @@ class AlembicMigrationsNotFound(ConfigurationError):
 
 
 class Configuration(metaclass=Meta):
-    _environment: dict[str, str]
+    _environment: dict[str, str | int]
 
-    def __init__(self, environment: dict[str, str] | None = None) -> None:
+    def __init__(self, environment: dict[str, str | int] | None = None) -> None:
         environment = environment if environment is not None else {}
         self._environment = {
             **environment,
@@ -76,14 +79,28 @@ class Configuration(metaclass=Meta):
         except KeyError:
             raise ConfigurationMissingVariable(variable)
 
+    def _set(self, variable: str, value: str | int) -> None:
+        self._environment[variable] = f"{value}"
+        os.environ[variable] = f"{value}"
+
+
+class Variables(shared.Iterable):
+    username = "POSTGRES_USERNAME"
+    password = "POSTGRES_PASSWORD"
+    database = "POSTGRES_DATABASE"
+    host = "POSTGRES_HOST"
+    port = "POSTGRES_PORT"
+
 
 class DatabaseConfiguration(Configuration):
     migrations: Path
     alembic: AlembicConfiguration
 
+    variables = Variables()
+
     def __init__(
         self,
-        environment: dict[str, str] | None = None,
+        environment: dict[str, str | int] | None = None,
         alembic: AlembicConfiguration | None = None,
     ) -> None:
         super().__init__(environment)
@@ -98,42 +115,50 @@ class DatabaseConfiguration(Configuration):
             self.migrations.mkdir(exist_ok=True)
         except FileNotFoundError:
             raise AlembicMigrationsNotFound(self.migrations)
+        self._write()
 
     @property
     def username(self) -> str:
         try:
-            return self._string("POSTGRES_USERNAME")
+            return self._string(self.variables.username)
         except ConfigurationMissingVariable:
             return "lite-star"
 
     @property
     def password(self) -> str:
         try:
-            return self._string("POSTGRES_PASSWORD")
+            return self._string(self.variables.password)
         except ConfigurationMissingVariable:
             return "lite-star"
 
     @property
-    def database(self):
+    def database(self) -> str:
         try:
-            return self._string("POSTGRES_DATABASE")
+            return self._string(self.variables.database)
         except ConfigurationMissingVariable:
             return "lite-star"
 
     @property
-    def host(self):
+    def host(self) -> str:
         try:
-            return self._string("POSTGRES_HOST")
+            return self._string(self.variables.host)
         except ConfigurationMissingVariable:
             return "localhost"
 
     @property
-    def port(self):
+    def port(self) -> int:
         try:
-            return self._integer("POSTGRES_PORT")
+            return self._integer(self.variables.port)
         except ConfigurationMissingVariable:
-            return "5432"
+            return 5432
 
     @property
-    def url(self):
+    def url(self) -> str:
         return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+    def _write(self) -> None:
+        self._set(self.variables.username, self.username)
+        self._set(self.variables.password, self.password)
+        self._set(self.variables.database, self.database)
+        self._set(self.variables.host, self.host)
+        self._set(self.variables.port, self.port)

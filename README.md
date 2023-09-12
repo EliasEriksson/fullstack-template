@@ -76,7 +76,7 @@ try to implement support for it rather than calling alembic manually.
     - alembic internal commands api [docs](https://alembic.sqlalchemy.org/en/latest/api/commands.html)
     - some [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
 - [ ] database abstraction
-- [ ] lite-start hello world
+- [x] lite-start hello world
 - [ ] logging
 - [ ] storing passwords
 - [ ] authentication
