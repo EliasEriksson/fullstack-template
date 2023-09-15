@@ -16,3 +16,6 @@ class User(Base):
     posts: Mapped[list["Post"]] = relationship(
         back_populates="user", cascade="all, delete", passive_deletes=True
     )
+
+    def __init__(self, *, email: str) -> None:
+        super().__init__(email=email)

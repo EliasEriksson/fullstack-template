@@ -1,23 +1,25 @@
 from __future__ import annotations
-
-import os
-from collections.abc import AsyncGenerator
-from litestar import Litestar, get
+from litestar import Litestar, Router
 from litestar.contrib.sqlalchemy.plugins import SQLAlchemySerializationPlugin
-import database
-from database import DatabaseConfiguration
-from contextlib import asynccontextmanager
+from . import endpoints
+from litestar.openapi import OpenAPIConfig
+from litestar import get
 
 
-@get("/")
-async def hello_world() -> str:
-    database = DatabaseConfiguration()
-    print(database.url)
-    return "Hello, world!"
+@get("/hello")
+async def hello() -> str:
+    return "hello world"
 
 
 app = Litestar(
-    [hello_world],
+    [
+        hello,
+        Router(
+            path="/users",
+            route_handlers=[endpoints.Users],
+        ),
+    ],
+    openapi_config=OpenAPIConfig(title="lite-star", version="0.0.0", path="/"),
     plugins=[
         SQLAlchemySerializationPlugin(),
     ],
