@@ -2,6 +2,7 @@ import click
 import sys
 from . import api
 from . import ui
+from database.configuration import DatabaseConfiguration
 from . import database
 import subprocess
 
@@ -22,6 +23,6 @@ cli.add_command(database.cli)
     help="Postgres database name.",
 )
 def test(**credentials: str):
-    database.DatabaseConfiguration(credentials)
+    DatabaseConfiguration(credentials)
     return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
     sys.exit(return_code)

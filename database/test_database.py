@@ -1,7 +1,7 @@
 import pytest
-from . import models
+from database import models
 from sqlalchemy import select
-from . import Database
+from database import Database
 
 
 @pytest.fixture

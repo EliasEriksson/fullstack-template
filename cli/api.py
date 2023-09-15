@@ -2,7 +2,7 @@ import os
 from typing import Literal
 import uvicorn
 import click
-from database import DatabaseConfiguration
+from database.configuration import DatabaseConfiguration
 
 
 cli = click.Group("api")

@@ -1,6 +1,6 @@
-from .configuration import Configuration
-from .configuration import ConfigurationValueError
-from .configuration import ConfigurationMissingVariable
+from shared.configuration import Configuration
+from shared.configuration import ConfigurationValueError
+from shared.configuration import ConfigurationMissingVariable
 
 
 async def test_missing_variable():
