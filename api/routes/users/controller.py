@@ -7,9 +7,12 @@ from database import models
 from . import dtos
 import uuid
 from .responses import Response
+from pathlib import Path
 
 
 class Controller(LitestarController):
+    path = str(Path(__file__).parent.name)
+
     @get("/", dto=dtos.User, tags=["user"], summary="GET User")
     async def fetch(self) -> Response[models.User]:
         database = Database()
