@@ -21,6 +21,7 @@ class Users:
         async with self._session(bind=self._engine) as session:
             async with session.begin():
                 session.add(user)
+            await session.commit()
         return user
 
     async def fetch(self, id: UUID) -> User | None:
