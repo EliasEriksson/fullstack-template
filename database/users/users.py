@@ -1,9 +1,13 @@
+from __future__ import annotations
+from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy import select
-from .models import User
+from sqlalchemy import inspect
+from database.models import User
+from ..page import Page
 from uuid import UUID
+from . import queries
 
 
 class Users:
@@ -25,19 +29,22 @@ class Users:
         return user
 
     async def fetch(self, id: UUID) -> User | None:
-        query = select(User).where(id=id)
         async with self._session(bind=self._engine) as session:
-            result = await session.execute(query)
-        return result.scalar_one_or_none()
+            return await queries.fetch(session, id)
 
-    async def list(self):
-        query = select(User)
+    async def list(self, size: int, page: int) -> tuple[Sequence[User], Page]:
         async with self._session(bind=self._engine) as session:
-            result = await session.execute(query)
-        return result.scalars().all()
+            async with session.begin():
+                users = await queries.list(session, size, page)
+                count = await queries.count(session)
+        return users, Page(size, page, count)
 
-    async def patch(self):
-        pass
+    async def patch(self, user: User):
+        async with self._session(bind=self._engine) as session:
+            async with session.begin():
+                session.add(user)
+            await session.commit()
+        return user
 
     async def delete(self):
         pass

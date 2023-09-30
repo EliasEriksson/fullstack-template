@@ -4,4 +4,8 @@ from database import models
 
 
 class User(SQLAlchemyDTO[models.User]):
-    config = DTOConfig()
+    config = DTOConfig(max_nested_depth=2)
+
+
+class PatchUser(SQLAlchemyDTO[models.User]):
+    config = DTOConfig(exclude={"id"}, max_nested_depth=2, partial=True)
