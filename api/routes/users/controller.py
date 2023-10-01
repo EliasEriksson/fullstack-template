@@ -30,6 +30,8 @@ class Controller(LitestarController):
     async def fetch(self, id: UUID) -> Response[models.User]:
         database = Database()
         result = await database.users.fetch(id)
+        if not result:
+            raise NotFoundException(detail=f"No user with id: '{id}' exists.")
         return Response(result)
 
     @get("/", dto=dtos.User, tags=["user"], summary="GET Users")
@@ -53,7 +55,7 @@ class Controller(LitestarController):
         self, id: UUID, data: DTOData[models.User]
     ) -> Response[models.User]:
         database = Database()
-        user = await database.users.fetch(id)
+        user = models.User(id=id)
         if not user:
             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
         data.update_instance(user)

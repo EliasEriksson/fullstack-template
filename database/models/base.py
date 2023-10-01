@@ -3,7 +3,9 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy import Uuid
+from sqlalchemy import DateTime
 from sqlalchemy import text
+from sqlalchemy import func
 import uuid
 
 
@@ -13,6 +15,16 @@ class Base(AsyncAttrs, DeclarativeBase):
         primary_key=True,
         nullable=False,
         server_default=text("gen_random_uuid()"),
+    )
+    created: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    modified: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )
 
     def __repr__(self) -> str:
