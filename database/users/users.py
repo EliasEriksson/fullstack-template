@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import AsyncEngine
 from database.models import User
 from ..page import Page
 from uuid import UUID
@@ -10,39 +8,29 @@ from . import queries
 
 
 class Users:
-    _engine: AsyncEngine
-    _session: async_sessionmaker[AsyncSession]
+    _session: AsyncSession
 
-    def __init__(
-        self, engine: AsyncEngine, session: async_sessionmaker[AsyncSession]
-    ) -> None:
-        self._engine = engine
+    def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, *, email: str) -> User:
-        user = User(email=email)
-        async with self._session(bind=self._engine) as session:
-            async with session.begin():
-                session.add(user)
-            await session.commit()
+    async def create(self, patch: Callable[[User], NoReturn]) -> User:
+        user = User()
+        patch(user)
+        self._session.add(user)
+        await self._session.commit()
         return user
 
     async def fetch(self, id: UUID) -> User | None:
-        async with self._session(bind=self._engine) as session:
-            return await queries.fetch(session, id)
+        return await queries.fetch(self._session, id)
 
     async def list(self, size: int, page: int) -> tuple[Sequence[User], Page]:
-        async with self._session(bind=self._engine) as session:
-            async with session.begin():
-                users = await queries.list(session, size, page)
-                count = await queries.count(session)
+        users = await queries.list(self._session, size, page)
+        count = await queries.count(self._session)
         return users, Page(size, page, count)
 
     async def patch(self, user: User):
-        async with self._session(bind=self._engine) as session:
-            async with session.begin():
-                session.add(user)
-            await session.commit()
+        self._session.add(user)
+        await self._session.commit()
         return user
 
     async def delete(self):

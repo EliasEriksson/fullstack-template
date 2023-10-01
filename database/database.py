@@ -1,3 +1,4 @@
+from __future__ import annotations
 from . import DatabaseConfiguration
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -5,22 +6,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 from . import models
-from .users import Users
+from .session import Session
 
 
 class Database:
     _configuration: DatabaseConfiguration
     _engine: AsyncEngine
-    _session: async_sessionmaker[AsyncSession]
-    users: Users
+    _session_maker: async_sessionmaker[AsyncSession]
+    _session: AsyncSession | None
 
     def __init__(self, configuration: DatabaseConfiguration | None = None) -> None:
         self._configuration = (
             configuration if configuration is not None else DatabaseConfiguration()
         )
         self._engine = create_async_engine(self._configuration.url, echo=True)
-        self._session = async_sessionmaker(self._engine, expire_on_commit=False)
-        self.users = Users(self._engine, self._session)
+        self._session_maker = async_sessionmaker(self._engine, expire_on_commit=False)
 
     async def create(self) -> None:
         async with self._engine.begin() as connection:
@@ -37,6 +37,14 @@ class Database:
             for content in migrations.iterdir():
                 if content.is_file():
                     content.unlink()
+
+    async def __aenter__(self) -> Session:
+        self._session = await self._session_maker(bind=self._engine).__aenter__()
+        return Session(self._session)
+
+    async def __aexit__(self, *args, **kwargs) -> None:
+        if self._session:
+            await self._session.__aexit__(*args, **kwargs)
 
     async def dispose(self) -> None:
         await self._engine.dispose()
