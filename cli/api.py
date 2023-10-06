@@ -52,6 +52,6 @@ def start(
 ) -> None:
     DatabaseConfiguration(environment=credentials)
     if mode == "prod":
-        uvicorn.run("api:app", port=port, log_level="info")
+        uvicorn.run("api:api", port=port, log_level="info")
     else:
-        uvicorn.run("api:app", reload=True, port=port, log_level="info")
+        uvicorn.run("api:api", reload=True, port=port, log_level="info")

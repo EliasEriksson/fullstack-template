@@ -4,17 +4,19 @@ from litestar import Controller as LitestarController
 from litestar import get
 from litestar import post
 from litestar import patch
+from litestar import delete
+from litestar import Response
+from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
-from litestar.dto import DTOData
 from litestar.exceptions import NotFoundException
-from litestar.exceptions import ClientException, HTTPException
+from litestar.exceptions import ClientException
 from database import Database
-from database import models
-from . import dtos
 from uuid import UUID
-from api.responses import Response
-from api.responses import PagedResponse
-from pathlib import Path
+from ...responses import Resource
+from ...responses import PagedResource
+from .responses import User
+from .responses import Creatable
+from .responses import Patchable
 
 
 class PreconditionFailedException(ClientException):
@@ -22,55 +24,85 @@ class PreconditionFailedException(ClientException):
 
 
 class Controller(LitestarController):
-    path = str(Path(__file__).parent.name)
+    path = "/users"
 
-    @post(
-        "/",
-        dto=dtos.CreateUser,
-        return_dto=dtos.User,
-        tags=["user"],
-        summary="POST User",
-    )
-    async def create(self, data: DTOData[models.User]) -> Response[models.User]:
+    @post("/", tags=["user"], summary="POST User")
+    async def create(
+        self,
+        data: Creatable,
+    ) -> Response[Resource[User]]:
         async with Database() as session:
             async with session.transaction():
-                result = await session.users.create(data.update_instance)
-        return Response(result)
+                created = await session.users.create(Creatable.create(data))
+        result = User.from_model(created)
+        return Response(
+            Resource(result),
+            headers=[ResponseHeader(name="Etag", value=result.etag)],
+        )
 
-    @get("/{id:uuid}", dto=dtos.User, tags=["user"], summary="GET User")
-    async def fetch(self, id: UUID) -> Response[models.User]:
+    @get("/{id:uuid}", tags=["user"], summary="GET User")
+    async def fetch(
+        self,
+        id: UUID,
+    ) -> Response[Resource[User]]:
         async with Database() as session:
             async with session.transaction():
-                result = await session.users.fetch(id)
+                result = User.from_model(await session.users.fetch(id))
         if not result:
             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-        return Response(result)
+        return Response(
+            Resource(result),
+            headers=[
+                ResponseHeader(
+                    name="ETag",
+                    value=result.etag,
+                )
+            ],
+        )
 
-    @get("/", dto=dtos.User, tags=["user"], summary="GET Users")
+    @get("/", tags=["user"], summary="GET Users")
     async def list(
         self,
+        email: list[str] | None,
         size: Annotated[int, Parameter(gt=0)] = 10,
         page: Annotated[int, Parameter(ge=0)] = 0,
-    ) -> PagedResponse[models.User]:
+    ) -> Response[PagedResource[User]]:
+        emails = [] if not email else email
         async with Database() as session:
             async with session.transaction():
-                result, page = await session.users.list(size, page)
-        return PagedResponse(result, page)
+                result, page = await session.users.list(emails, size, page)
+        return Response(
+            PagedResource(
+                [User.from_model(user) for user in result],
+                page,
+            )
+        )
 
-    @patch(
-        "/{id:uuid}",
-        dto=dtos.PatchUser,
-        return_dto=dtos.User,
-        tags=["user"],
-        summary="PATCH User",
-    )
+    @patch("/{id:uuid}", tags=["user"], summary="PATCH User")
     async def patch(
-        self, id: UUID, data: DTOData[models.User]
-    ) -> Response[models.User]:
+        self,
+        id: UUID,
+        data: Patchable,
+    ) -> Response[Resource[User]]:
         async with Database() as session:
-            user = await session.users.fetch(id)
-            if not user:
+            async with session.transaction():
+                current = await session.users.fetch(id)
+            if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            data.update_instance(user)
-            result = await session.users.patch(user)
-        return Response(result)
+            async with session.transaction():
+                patched = await session.users.patch(Patchable.patch(current, data))
+        result = User.from_model(patched)
+        return Response(
+            Resource(result),
+            headers=[ResponseHeader(name="Etag", value=result.etag)],
+        )
+
+    @delete("/{id:uuid}", tags=["user"], summary="Delete User")
+    async def delete(self, id: UUID) -> None:
+        async with Database() as session:
+            async with session.transaction():
+                current = await session.users.fetch(id)
+            if not current:
+                raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+            async with session.transaction():
+                await session.users.delete(current)

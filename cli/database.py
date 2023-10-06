@@ -72,6 +72,7 @@ def delete(**credentials: str | int) -> None:
         print("Proceeding...")
         database = Database(configuration)
         asyncio.run(database.delete())
+        print("Database deleted.")
     else:
         print("Aborted.")
 
