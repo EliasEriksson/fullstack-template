@@ -1,3 +1,4 @@
+from typing import Any
 from pathlib import Path
 from alembic.config import Config as AlembicConfiguration
 from shared.configuration import ConfigurationError
@@ -31,7 +32,7 @@ class DatabaseConfiguration(Configuration):
 
     def __init__(
         self,
-        environment: dict[str, str | int] | None = None,
+        environment: dict[str, Any] | None = None,
         alembic: AlembicConfiguration | None = None,
     ) -> None:
         super().__init__(environment)

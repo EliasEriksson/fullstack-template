@@ -12,35 +12,35 @@ cli = click.Group("database")
 def database_credentials(command):
     options = (
         click.option(
-            "--username",
+            "--postgres-username",
             "-u",
             "POSTGRES_USERNAME",
             type=str,
             help="Postgres username.",
         ),
         click.option(
-            "--password",
+            "--postgres-password",
             "-p",
             "POSTGRES_PASSWORD",
             type=str,
             help="Postgres password.",
         ),
         click.option(
-            "--database",
+            "--postgres-database",
             "-d",
             "POSTGRES_DATABASE",
             type=str,
             help="Postgres database name.",
         ),
         click.option(
-            "--host",
+            "--postgres-host",
             "-h",
             "POSTGRES_HOST",
             type=str,
             help="Hostname for Postgres database location.",
         ),
         click.option(
-            "--port",
+            "--postgres-port",
             "-P",
             "POSTGRES_PORT",
             type=int,
@@ -72,6 +72,7 @@ def delete(**credentials: str | int) -> None:
         print("Proceeding...")
         database = Database(configuration)
         asyncio.run(database.delete())
+        print("Database deleted.")
     else:
         print("Aborted.")
 

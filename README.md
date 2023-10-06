@@ -16,6 +16,7 @@ Playground for lite-star
 ## Setup
 ### Install non python dependencies
 * [postgresql](https://www.postgresql.org/download/)
+* `apt get python-dev`
 ### Configure postgres user
 create the lite-star user and database
 ```sql
@@ -75,8 +76,9 @@ try to implement support for it rather than calling alembic manually.
   - [x] call alembic from cli script
     - alembic internal commands api [docs](https://alembic.sqlalchemy.org/en/latest/api/commands.html)
     - some [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
-- [ ] database abstraction
 - [x] lite-start hello world
+- [ ] database abstraction
+- [ ] user CRUD
 - [ ] logging
 - [ ] storing passwords
 - [ ] authentication

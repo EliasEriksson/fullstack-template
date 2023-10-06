@@ -13,7 +13,7 @@ async def database():
 
 
 async def test_user(database: Database) -> None:
-    async with database._session() as session:
+    async with database._session_maker() as session:
         users = await session.execute(select(models.User))
         assert len(users.scalars().all()) == 0
         await session.commit()
