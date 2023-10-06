@@ -2,7 +2,7 @@ from __future__ import annotations
 from ...responses import Base
 from database import models
 from msgspec import Struct
-from xxhash import xxh128
+from shared import hash
 
 
 class Creatable(Struct):
@@ -23,7 +23,7 @@ class User(Base):
             created=user.created,
             modified=user.modified,
             email=user.email,
-            etag=xxh128(user.modified.isoformat()).digest().hex(),
+            etag=hash(user.modified),
         )
         return instance
 

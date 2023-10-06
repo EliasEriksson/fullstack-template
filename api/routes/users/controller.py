@@ -6,6 +6,7 @@ from litestar import post
 from litestar import patch
 from litestar import delete
 from litestar import Response
+from litestar.datastructures import Headers
 from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
 from litestar.exceptions import NotFoundException
@@ -14,9 +15,11 @@ from database import Database
 from uuid import UUID
 from ...responses import Resource
 from ...responses import PagedResource
+from ...guards import if_match
 from .responses import User
 from .responses import Creatable
 from .responses import Patchable
+from shared import hash
 
 
 class PreconditionFailedException(ClientException):
@@ -26,7 +29,11 @@ class PreconditionFailedException(ClientException):
 class Controller(LitestarController):
     path = "/users"
 
-    @post("/", tags=["user"], summary="POST User")
+    @post(
+        "/",
+        tags=["user"],
+        summary="POST User",
+    )
     async def create(
         self,
         data: Creatable,
@@ -37,10 +44,14 @@ class Controller(LitestarController):
         result = User.from_model(created)
         return Response(
             Resource(result),
-            headers=[ResponseHeader(name="Etag", value=result.etag)],
+            headers=[ResponseHeader(name="ETag", value=result.etag)],
         )
 
-    @get("/{id:uuid}", tags=["user"], summary="GET User")
+    @get(
+        "/{id:uuid}",
+        tags=["user"],
+        summary="GET User",
+    )
     async def fetch(
         self,
         id: UUID,
@@ -78,27 +89,43 @@ class Controller(LitestarController):
             )
         )
 
-    @patch("/{id:uuid}", tags=["user"], summary="PATCH User")
+    @patch(
+        "/{id:uuid}",
+        guards=[if_match],
+        tags=["user"],
+        summary="PATCH User",
+    )
     async def patch(
         self,
+        headers: Headers,
         id: UUID,
         data: Patchable,
     ) -> Response[Resource[User]]:
+        etag = headers.get("If-match")
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+            if hash(current.modified) != etag:
+                raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
                 patched = await session.users.patch(Patchable.patch(current, data))
         result = User.from_model(patched)
         return Response(
             Resource(result),
-            headers=[ResponseHeader(name="Etag", value=result.etag)],
+            headers=[ResponseHeader(name="ETag", value=result.etag)],
         )
 
-    @delete("/{id:uuid}", tags=["user"], summary="Delete User")
-    async def delete(self, id: UUID) -> None:
+    @delete(
+        "/{id:uuid}",
+        tags=["user"],
+        summary="Delete User",
+    )
+    async def delete(
+        self,
+        id: UUID,
+    ) -> None:
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
