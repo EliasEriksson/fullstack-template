@@ -2,9 +2,9 @@ from __future__ import annotations
 from ...schemas import Base
 from database import models
 from msgspec import Struct
-from shared import hash
 from bcrypt import hashpw
 from bcrypt import gensalt
+from shared import hash
 
 
 class Password(Struct):
@@ -12,7 +12,7 @@ class Password(Struct):
     repeat: str
 
     def hash(self) -> bytes:
-        return hashpw(self.new.encode(), gensalt())
+        return hash.password(self.new)
 
 
 class PatchablePassword(Password):
@@ -41,7 +41,7 @@ class User(Base):
             created=user.created,
             modified=user.modified,
             email=user.email,
-            etag=hash(user.modified),
+            etag=hash.etag(user.modified),
         )
         return instance
 

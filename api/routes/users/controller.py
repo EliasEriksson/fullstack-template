@@ -109,7 +109,7 @@ class Controller(LitestarController):
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             if not current.verify(data.password.old):
                 raise ForbiddenException()
-            if hash(current.modified) != etag:
+            if hash.etag(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
                 patched = await session.users.patch(Patchable.patch(current, data))
