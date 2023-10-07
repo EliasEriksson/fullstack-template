@@ -3,6 +3,7 @@ from functools import reduce
 import uvicorn
 import click
 from database.configuration import DatabaseConfiguration
+from api.configuration import ApiConfiguration
 
 cli = click.Group("api")
 
@@ -48,10 +49,12 @@ def database_credentials(command):
 @click.argument("mode", type=click.Choice(["prod", "dev"]), default="dev")
 @click.option("-p", "--port", type=int, default=8080)
 def start(
-    mode: Literal["prod"] | Literal["dev"], port: int, **credentials: dict[str, any]
+    mode: Literal["prod"] | Literal["dev"], port: int, **environment: dict[str, any]
 ) -> None:
-    DatabaseConfiguration(environment=credentials)
+    DatabaseConfiguration(environment=environment)
     if mode == "prod":
+        ApiConfiguration(environment=environment, secure=True)
         uvicorn.run("api:api", port=port, log_level="info")
     else:
+        ApiConfiguration(environment=environment, secure=False)
         uvicorn.run("api:api", reload=True, port=port, log_level="info")

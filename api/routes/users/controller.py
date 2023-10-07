@@ -13,17 +13,15 @@ from litestar.exceptions import NotFoundException
 from litestar.exceptions import ClientException
 from database import Database
 from uuid import UUID
-from ...responses import Resource
-from ...responses import PagedResource
+from ...exceptions import ForbiddenException
+from ...exceptions import PreconditionFailedException
+from ...schemas import Resource
+from ...schemas import PagedResource
 from ...guards import if_match
-from .responses import User
-from .responses import Creatable
-from .responses import Patchable
+from .schemas import User
+from .schemas import Creatable
+from .schemas import Patchable
 from shared import hash
-
-
-class PreconditionFailedException(ClientException):
-    status_code = 412
 
 
 class Controller(LitestarController):
@@ -101,12 +99,16 @@ class Controller(LitestarController):
         id: UUID,
         data: Patchable,
     ) -> Response[Resource[User]]:
+        if data.password.new != data.password.repeat:
+            raise ClientException("Passwords are not matching.")
         etag = headers.get("If-match")
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+            if not current.verify(data.password.old):
+                raise ForbiddenException()
             if hash(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
