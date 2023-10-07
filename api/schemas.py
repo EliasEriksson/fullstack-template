@@ -38,22 +38,25 @@ class Token(Struct):
 
     @classmethod
     def from_model(cls, user: models.User) -> Token:
+        # "*bangs table* There must be a better way! "
         return cls(
             sub=user.id,
-            exp=datetime.now() + timedelta(hours=8),
+            exp=round((datetime.now() + timedelta(hours=8)).timestamp()),
         )
 
     def dict(self) -> dict[str, Any]:
+        # "*bangs table* There must be a better way!"
         return {
             "sub": str(self.sub),
-            "exp": str(self.exp),
+            "exp": self.exp,
         }
 
     @classmethod
     def decode(cls, token: str) -> Token:
         configuration = ApiConfiguration()
         try:
-            return cls(**jwt.decode(token=token, key=configuration.jwt_public_key))
+            decoded = jwt.decode(token=token, key=configuration.jwt_public_key)
+            return cls(sub=decoded["sub"], exp=datetime.fromtimestamp(decoded["exp"]))
         except JWKError:
             raise TokenDecodeException()
 

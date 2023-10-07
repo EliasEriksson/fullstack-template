@@ -16,14 +16,20 @@ class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
 
 
 class BearerAuthentication(AbstractAuthentication):
+    _authorizationPattern = re.compile(r"^Bearer\s(.*)$")
+
     async def authenticate_request(
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
         authorization = connection.headers.get(self.header)
         if not authorization:
             raise NotAuthorizedException()
+        if not (match := self._authorizationPattern.search(authorization)):
+            raise NotAuthorizedException()
+        if not (jwt := match.group(1)):
+            raise NotAuthorizedException()
         try:
-            token = Token.decode(authorization)
+            token = Token.decode(jwt)
         except TokenDecodeException:
             raise NotAuthorizedException()
         async with Database() as session:
@@ -35,8 +41,8 @@ class BearerAuthentication(AbstractAuthentication):
 
 
 class BasicAuthentication(AbstractAuthentication):
-    authorizationPattern = re.compile(r"Basic (.*)")
-    credentialsPattern = re.compile(r"^([^:]*):([^:]*)")
+    _authorizationPattern = re.compile(r"^Basic\s(.*)$")
+    _credentialsPattern = re.compile(r"^([^:]*):([^:]*)$")
 
     async def authenticate_request(
         self, connection: ASGIConnection
@@ -45,12 +51,12 @@ class BasicAuthentication(AbstractAuthentication):
         if not authorization:
             # add www-authenticate header to response. Is this done in route handler? security kwarg?
             raise NotAuthorizedException()
-        if not (match := self.authorizationPattern.search(authorization)):
+        if not (match := self._authorizationPattern.search(authorization)):
             raise NotAuthorizedException()
         if not (encodedCredentials := match.group(1)):
             raise NotAuthorizedException()
         credentials = b64decode(encodedCredentials).decode("utf-8")
-        if not (match := self.credentialsPattern.search(credentials)):
+        if not (match := self._credentialsPattern.search(credentials)):
             raise NotAuthorizedException()
         if not (email := match.group(1)) or not (password := match.group(2)):
             raise NotAuthorizedException()
