@@ -34,7 +34,7 @@ class BearerAuthentication(AbstractAuthentication):
             raise NotAuthorizedException()
         async with Database() as session:
             async with session.transaction():
-                user = await session.users.fetch(token.sub)
+                user = await session.users.fetch(token.subject)
         if not user:
             raise NotAuthorizedException()
         return AuthenticationResult(user=user, auth=token)

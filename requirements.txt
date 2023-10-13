@@ -19,7 +19,7 @@ httpx==0.24.1
 idna==3.4
 iniconfig==2.0.0
 jsbeautifier==1.14.9
-litestar==2.1.1
+litestar==2.2.1
 Mako==1.2.4
 markdown-it-py==3.0.0
 MarkupSafe==2.1.3

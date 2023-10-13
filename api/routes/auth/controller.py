@@ -6,14 +6,12 @@ from litestar import get
 from litestar import Response
 from litestar import Request
 from litestar.middleware.base import DefineMiddleware
-from litestar.datastructures import ResponseHeader
 from database import Database
 from database import models
-from api.routes.users.schemas import Creatable
-from api.routes.users.schemas import User
-from api.schemas import Resource
-from ...schemas import Token
-from ...middleware import BasicAuthentication
+from ..users.schemas import Creatable
+from ...schemas import Resource
+from .schemas import Token
+from .middlewares import BasicAuthentication
 
 
 basic = DefineMiddleware(BasicAuthentication)
@@ -34,7 +32,7 @@ class Controller(LitestarController):
         async with Database() as session:
             async with session.transaction():
                 created = await session.users.create(Creatable.create(data))
-        result = Token.from_model(created).encode()
+        result = Token.encode_model(created)
         return Response(
             Resource(result),
         )
@@ -49,5 +47,5 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, None, Any],
     ) -> Response[Resource[Token]]:
-        result = Token.from_model(request.user).encode()
+        result = Token.encode_model(request.user)
         return Response(Resource(result))

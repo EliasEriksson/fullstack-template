@@ -17,7 +17,6 @@ from ...exceptions import ForbiddenException
 from ...exceptions import PreconditionFailedException
 from ...schemas import Resource
 from ...schemas import PagedResource
-from ...guards import if_match
 from .schemas import User
 from .schemas import Creatable
 from .schemas import Patchable
@@ -89,19 +88,17 @@ class Controller(LitestarController):
 
     @patch(
         "/{id:uuid}",
-        guards=[if_match],
         tags=["user"],
         summary="PATCH User",
     )
     async def patch(
         self,
-        headers: Headers,
         id: UUID,
+        etag: Annotated[str, Parameter(header="If-Match")],
         data: Patchable,
     ) -> Response[Resource[User]]:
         if data.password.new != data.password.repeat:
             raise ClientException("Passwords are not matching.")
-        etag = headers.get("If-match")
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)

@@ -1,8 +1,11 @@
+from __future__ import annotations
+from typing import *
 import click
 import sys
 from . import api
 from . import ui
 from database.configuration import DatabaseConfiguration
+from api.configuration import ApiConfiguration
 from . import database
 import subprocess
 
@@ -13,7 +16,8 @@ cli.add_command(database.cli)
 
 
 @cli.command()
-@database.database_credentials
+@database.database_configuration
+@api.api_configuration
 @click.option(
     "--database",
     "-d",
@@ -22,7 +26,8 @@ cli.add_command(database.cli)
     type=str,
     help="Postgres database name.",
 )
-def test(**credentials: str):
-    DatabaseConfiguration(credentials)
+def test(**environment: dict[str, Any]):
+    DatabaseConfiguration(environment)
+    ApiConfiguration(environment, secure=False)
     return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
     sys.exit(return_code)

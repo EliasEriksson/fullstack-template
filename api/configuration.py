@@ -16,13 +16,13 @@ class Variables(Iterable):
 class ApiConfiguration(Configuration):
     _variables = Variables()
     _secure: bool
-    _privateKeyPattern = re.compile(
+    _private_key_pattern = re.compile(
         r"^-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----$"
     )
-    _publicKeyPattern = re.compile(
+    _public_key_pattern = re.compile(
         r"^-----BEGIN PUBLIC KEY-----.*?-----END PUBLIC KEY-----$"
     )
-    _whitespacePattern = re.compile(r"\s")
+    _whitespace_pattern = re.compile(r"\s")
 
     def __init__(
         self,
@@ -37,11 +37,11 @@ class ApiConfiguration(Configuration):
     def jwt_private_key(self) -> str:
         try:
             result = self._string(self._variables.jwt_private_key)
-            if self._privateKeyPattern.match(result):
+            if self._private_key_pattern.match(result):
                 return result
             return (
                 f"-----BEGIN PRIVATE KEY-----\n"
-                + self._whitespacePattern.sub("\n", result)
+                + self._whitespace_pattern.sub("\n", result)
                 + f"\n-----END PRIVATE KEY-----"
             )
         except ConfigurationMissingVariable as error:
@@ -107,11 +107,11 @@ class ApiConfiguration(Configuration):
     def jwt_public_key(self) -> str:
         try:
             result = self._string(self._variables.jwt_public_key)
-            if self._publicKeyPattern.match(result):
+            if self._public_key_pattern.match(result):
                 return result
             return (
                 f"-----BEGIN PUBLIC KEY-----\n"
-                + self._whitespacePattern.sub("\n", result)
+                + self._whitespace_pattern.sub("\n", result)
                 + f"\n-----END PUBLIC KEY-----"
             )
         except ConfigurationMissingVariable as error:
@@ -134,7 +134,7 @@ class ApiConfiguration(Configuration):
                 "-----END PUBLIC KEY-----"
             )
 
-    @property
+    @cached_property
     def password_pepper(self) -> str:
         try:
             return self._string(self._variables.password_pepper)

@@ -1,6 +1,6 @@
 from litestar import Router
 from litestar.middleware.base import DefineMiddleware
-from ..middleware import BearerAuthentication
+from .auth.middlewares import BearerAuthentication
 from . import users
 from . import auth
 
