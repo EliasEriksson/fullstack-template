@@ -105,10 +105,10 @@ try to implement support for it rather than calling alembic manually.
 - [x] lite-start hello world
 - [x] database abstraction
 - [x] user CRUD
-- [ ] storing passwords
-- [ ] authentication
-- [ ] issue JWTs
-- [ ] `GET /auth`
+- [x] storing passwords
+- [x] authentication
+- [x] issue JWTs
+- [x] `GET /auth`
 - [ ] test `GET /auth`
 - [ ] logging
 - [ ] use pypy?

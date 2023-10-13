@@ -6,7 +6,6 @@ from litestar import post
 from litestar import patch
 from litestar import delete
 from litestar import Response
-from litestar.datastructures import Headers
 from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
 from litestar.exceptions import NotFoundException
