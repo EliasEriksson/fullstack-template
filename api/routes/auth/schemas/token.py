@@ -14,7 +14,7 @@ from api.routes.auth.exceptions import TokenDecodeException
 from api.routes.auth.exceptions import TokenEncodeException
 from dataclasses import dataclass
 from litestar.connection.base import URL
-from shared import hash
+from . import password
 
 
 @dataclass
@@ -28,6 +28,18 @@ class Claims:
 @dataclass
 class Algorithms:
     RS512 = "RS512"
+
+
+class Creatable(Struct):
+    email: str
+    password: password.Creatable
+
+    @staticmethod
+    def create(user: Creatable) -> models.User:
+        return models.User(
+            email=user.email,
+            hash=user.password.hash(),
+        )
 
 
 class Token(Struct):
@@ -103,3 +115,15 @@ class Token(Struct):
                 audience=str(audience),
             )
         )
+
+
+class Patchable(Struct):
+    email: str | None = field(default=None)
+    password: password.Patchable | None = field(default=None)
+
+    def patch(self, user: models.User) -> models.User:
+        if self.email is not None:
+            user.email = self.email
+        if self.password is not None:
+            user.hash = self.password.hash()
+        return user

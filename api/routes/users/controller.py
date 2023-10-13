@@ -10,6 +10,7 @@ from litestar import Request
 from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
 from litestar.exceptions import NotFoundException
+from litestar.exceptions import ClientException
 from database import Database
 from database import models
 from uuid import UUID
@@ -17,9 +18,9 @@ from ...exceptions import ForbiddenException
 from ...exceptions import PreconditionFailedException
 from ...schemas import Resource
 from ...schemas import PagedResource
-from .schemas import User
-from .schemas import Creatable
-from .schemas import Patchable
+from api.routes.users.schemas.users import User
+from api.routes.users.schemas.users import Creatable
+from api.routes.users.schemas.users import Patchable
 from shared import hash
 from api.routes.auth.schemas.token import Token
 
@@ -99,14 +100,13 @@ class Controller(LitestarController):
         etag: Annotated[str, Parameter(header="If-Match")],
         data: Patchable,
     ) -> Response[Resource[User]]:
-        data.validate(request)
+        if id == request.user.id:
+            raise ForbiddenException()
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            if not current.verify(data.password.old):
-                raise ForbiddenException()
             if hash.etag(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():

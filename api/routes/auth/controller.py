@@ -7,9 +7,11 @@ from litestar import patch
 from litestar import Response
 from litestar import Request
 from litestar.middleware.base import DefineMiddleware
+from litestar.exceptions import ClientException
 from database import Database
 from database import models
-from ..users.schemas import Creatable
+from .schemas.token import Creatable
+from .schemas.token import Patchable
 from ...schemas import Resource
 from api.routes.auth.schemas.token import Token
 from .middlewares import BasicAuthentication
@@ -59,7 +61,14 @@ class Controller(LitestarController):
     async def patch(
         self,
         request: Request[models.User, Token, Any],
+        data: Patchable,
     ) -> Response[Resource[str]]:
+        if data.password and not request.user.verify(data.password.old):
+            raise ClientException("Password missmatch.")
+        async with Database() as session:
+            async with session.transaction():
+                patched = await session.users.patch(data.patch(request.user))
+        result = Token.encode_model(patched, request.base_url)
         return Response(
-            Resource(""),
+            Resource(result),
         )
