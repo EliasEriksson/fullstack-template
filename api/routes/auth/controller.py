@@ -3,6 +3,7 @@ from typing import *
 from litestar import Controller as LitestarController
 from litestar import post
 from litestar import get
+from litestar import patch
 from litestar import Response
 from litestar import Request
 from litestar.middleware.base import DefineMiddleware
@@ -10,11 +11,9 @@ from database import Database
 from database import models
 from ..users.schemas import Creatable
 from ...schemas import Resource
-from .schemas import Token
+from api.routes.auth.schemas.token import Token
 from .middlewares import BasicAuthentication
-
-
-basic = DefineMiddleware(BasicAuthentication)
+from .middlewares import BearerAuthentication
 
 
 class Controller(LitestarController):
@@ -27,13 +26,13 @@ class Controller(LitestarController):
     )
     async def create(
         self,
-        request: Request,
+        request: Request[None, None, Any],
         data: Creatable,
     ) -> Response[Resource[str]]:
         async with Database() as session:
             async with session.transaction():
                 created = await session.users.create(Creatable.create(data))
-        result = Token.encode_model(created, "asd")
+        result = Token.encode_model(created, request.base_url)
         return Response(
             Resource(result),
         )
@@ -42,11 +41,25 @@ class Controller(LitestarController):
         path="/",
         tags=["authentication"],
         summary="Authenticate user",
-        middleware=[basic],
+        middleware=[DefineMiddleware(BasicAuthentication)],
     )
     async def fetch(
         self,
         request: Request[models.User, None, Any],
-    ) -> Response[Resource[Token]]:
-        result = Token.encode_model(request.user, str(request.base_url))
-        return Response(Resource(result))
+    ) -> Response[Resource[str]]:
+        result = Token.encode_model(request.user, request.base_url)
+        return Response(
+            Resource(result),
+        )
+
+    @patch(
+        path="/",
+        middleware=[DefineMiddleware(BearerAuthentication)],
+    )
+    async def patch(
+        self,
+        request: Request[models.User, Token, Any],
+    ) -> Response[Resource[str]]:
+        return Response(
+            Resource(""),
+        )

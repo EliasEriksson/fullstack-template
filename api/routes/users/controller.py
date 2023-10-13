@@ -6,11 +6,12 @@ from litestar import post
 from litestar import patch
 from litestar import delete
 from litestar import Response
+from litestar import Request
 from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
 from litestar.exceptions import NotFoundException
-from litestar.exceptions import ClientException
 from database import Database
+from database import models
 from uuid import UUID
 from ...exceptions import ForbiddenException
 from ...exceptions import PreconditionFailedException
@@ -20,6 +21,7 @@ from .schemas import User
 from .schemas import Creatable
 from .schemas import Patchable
 from shared import hash
+from api.routes.auth.schemas.token import Token
 
 
 class Controller(LitestarController):
@@ -93,11 +95,11 @@ class Controller(LitestarController):
     async def patch(
         self,
         id: UUID,
+        request: Request[models.User, Token, Any],
         etag: Annotated[str, Parameter(header="If-Match")],
         data: Patchable,
     ) -> Response[Resource[User]]:
-        if data.password.new != data.password.repeat:
-            raise ClientException("Passwords are not matching.")
+        data.validate(request)
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
@@ -108,7 +110,7 @@ class Controller(LitestarController):
             if hash.etag(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
-                patched = await session.users.patch(Patchable.patch(current, data))
+                patched = await session.users.patch(data.patch(current))
         result = User.from_model(patched)
         return Response(
             Resource(result),
