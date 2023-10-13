@@ -19,13 +19,7 @@ class Claims:
     subject = "sub"
     expires = "exp"
     issued = "iss"
-
-
-@dataclass
-class Kwargs:
-    subject = "subject"
-    expires = "exp"
-    issued = "iss"
+    audience = "aud"
 
 
 @dataclass
@@ -34,12 +28,14 @@ class Algorithms:
 
 
 class Token(Struct):
+    audience: str
     subject: UUID
     expires: datetime
     issued: datetime
 
     def _to_jose_dict(self) -> dict[str, Any]:
         return {
+            Claims.audience: self.audience,
             Claims.subject: str(self.subject),
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
@@ -48,13 +44,14 @@ class Token(Struct):
     @classmethod
     def _from_jose_dict(cls, token: dict[str, Any]) -> Token:
         return cls(
+            audience=token[Claims.audience],
             subject=UUID(token[Claims.subject]),
             expires=datetime.fromtimestamp(token[Claims.expires]),
             issued=datetime.fromtimestamp(token[Claims.issued]),
         )
 
     @classmethod
-    def decode(cls, token: str) -> Token:
+    def decode(cls, token: str, audience: str) -> Token:
         configuration = ApiConfiguration()
         try:
             return cls._from_jose_dict(
@@ -62,6 +59,7 @@ class Token(Struct):
                     token,
                     key=configuration.jwt_public_key,
                     algorithms=[Algorithms.RS512],
+                    audience=audience,
                 )
             )
         except JWKError:
@@ -79,12 +77,13 @@ class Token(Struct):
             raise TokenEncodeException()
 
     @classmethod
-    def encode_model(cls, user: models.User) -> str:
+    def encode_model(cls, user: models.User, audience: str) -> str:
         now = datetime.fromtimestamp(round(datetime.now().timestamp()))
         return cls.encode(
             cls(
                 subject=user.id,
                 expires=now + timedelta(minutes=20),
                 issued=now,
+                audience=audience,
             )
         )

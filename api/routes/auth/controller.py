@@ -27,12 +27,14 @@ class Controller(LitestarController):
     )
     async def create(
         self,
+        request: Request,
         data: Creatable,
     ) -> Response[Resource[str]]:
+        print(request.url)
         async with Database() as session:
             async with session.transaction():
                 created = await session.users.create(Creatable.create(data))
-        result = Token.encode_model(created)
+        result = Token.encode_model(created, "asd")
         return Response(
             Resource(result),
         )
@@ -47,5 +49,5 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, None, Any],
     ) -> Response[Resource[Token]]:
-        result = Token.encode_model(request.user)
+        result = Token.encode_model(request.user, str(request.base_url))
         return Response(Resource(result))

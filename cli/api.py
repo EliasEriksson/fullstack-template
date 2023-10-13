@@ -44,7 +44,6 @@ def start(
     mode: Literal["prod"] | Literal["dev"], port: int, **environment: dict[str, Any]
 ) -> None:
     DatabaseConfiguration(environment=environment)
-    ApiConfiguration(environment=environment)
     if mode == "prod":
         ApiConfiguration(environment=environment, secure=True)
         uvicorn.run("api:api", port=port, log_level="info")
