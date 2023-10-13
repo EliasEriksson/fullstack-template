@@ -30,7 +30,6 @@ class Controller(LitestarController):
         request: Request,
         data: Creatable,
     ) -> Response[Resource[str]]:
-        print(request.url)
         async with Database() as session:
             async with session.transaction():
                 created = await session.users.create(Creatable.create(data))
