@@ -13,8 +13,7 @@ from api.routes.auth.schemas.token import Token
 
 class Creatable(Struct):
     email: str
-    # make this optional in model. no password on user = deactivated
-    password: password.Creatable | None = field(default=None)
+    password: password.Creatable = field(default=None)
 
     @staticmethod
     def create(user: Creatable) -> models.User:

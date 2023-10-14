@@ -102,6 +102,8 @@ class Controller(LitestarController):
     ) -> Response[Resource[User]]:
         if id == request.user.id:
             raise ForbiddenException()
+        if data.password and data.password.new != data.password.repeat:
+            raise ClientException(f"Repeated password not equal to new password.")
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)

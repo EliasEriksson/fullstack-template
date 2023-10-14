@@ -63,8 +63,11 @@ class Controller(LitestarController):
         request: Request[models.User, Token, Any],
         data: Patchable,
     ) -> Response[Resource[str]]:
-        if data.password and not request.user.verify(data.password.old):
-            raise ClientException("Password missmatch.")
+        if data.password:
+            if data.password.new != data.password.repeat:
+                raise ClientException("Repeated password not equal to new password.")
+            if not request.user.verify(data.password.old):
+                raise ClientException("Password missmatch.")
         async with Database() as session:
             async with session.transaction():
                 patched = await session.users.patch(data.patch(request.user))

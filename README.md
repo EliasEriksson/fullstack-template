@@ -109,9 +109,19 @@ try to implement support for it rather than calling alembic manually.
 - [x] authentication
 - [x] issue JWTs
 - [x] `GET /auth`
-- [ ] test `GET /auth`
-- [ ] logging
-- [ ] use pypy?
-    * use h11 over httptools?
-    * other packages might need to change to be compatible
+- [x] setup postman
+  * [workspace](https://www.postman.com/eliaseriksson/workspace/eliaseriksson-fullstack-template/overview)
+- [ ] creating other users
+- [ ] patching other users
+- [ ] multiple email addresses per user
+- [ ] fully remove self
+- [ ] fully remove other user
+- [ ] deactivate self
+- [ ] deactivate user
+  * make password nullable?
+  * make active column?
+  * password hash of 0 bytes?
+- [ ] permissions
+- [ ] roles
+- [ ] test all endpoints
 - [ ] email verification?
