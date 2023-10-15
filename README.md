@@ -1,5 +1,5 @@
-# lite-star
-Playground for lite-star
+# Fullstack template
+postgres litestar Next.js
 
 ## Dependencies
 ### Non Python dependencies
@@ -90,7 +90,8 @@ try to implement support for it rather than calling alembic manually.
    python main.py database migrate
    ```
 
-## TODO
+## Roadmap
+### Backend
 - [x] implement postgres
   - [x] change uuid id to server default 
   - [x] setup database tests to be able to use postgres
@@ -133,3 +134,5 @@ try to implement support for it rather than calling alembic manually.
 - [ ] test all endpoints
 - [ ] add docstrings to functions and methods
 - [ ] email verification?
+### Frontend
+- [ ] admin CRUD page
