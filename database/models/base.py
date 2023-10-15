@@ -6,11 +6,11 @@ from sqlalchemy import Uuid
 from sqlalchemy import DateTime
 from sqlalchemy import text
 from sqlalchemy import func
-import uuid
+from uuid import UUID
 
 
 class Base(AsyncAttrs, DeclarativeBase):
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True, native_uuid=True),
         primary_key=True,
         nullable=False,
