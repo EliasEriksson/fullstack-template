@@ -123,6 +123,7 @@ try to implement support for it rather than calling alembic manually.
   * make active column?
   * password hash of 0 bytes?
 - [ ] refactor exceptions
+- [ ] refactor to top folders backend / frontend / cli / static?
 - [ ] catch server errors
   * creating the same user
 - [ ] permissions
