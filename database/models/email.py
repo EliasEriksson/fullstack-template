@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import *
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from sqlalchemy import String
 from sqlalchemy import ForeignKey
 from database.models.base import Base
@@ -9,7 +10,7 @@ from uuid import UUID
 
 
 if TYPE_CHECKING:
-    pass
+    from .user import User
 
 
 class Email(Base):
@@ -17,4 +18,4 @@ class Email(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
     email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
 
-    # user: Mapped[]
+    user: Mapped[User] = relationship(back_populates="emails")
