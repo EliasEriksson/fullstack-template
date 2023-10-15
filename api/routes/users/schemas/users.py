@@ -1,14 +1,11 @@
 from __future__ import annotations
-from typing import *
 from api.schemas import Base
-from litestar import Request
-from litestar.exceptions import ClientException
 from database import models
 from msgspec import Struct
 from msgspec import field
 from shared import hash
+from datetime import datetime
 from ...auth.schemas import password
-from api.routes.auth.schemas.token import Token
 
 
 class Creatable(Struct):
@@ -47,4 +44,5 @@ class Patchable(Struct):
             user.email = self.email
         if self.password and self.password.new:
             user.hash = self.password.hash()
+        user.modified = datetime.now()
         return user

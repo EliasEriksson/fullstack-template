@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import *
 from xxhash import xxh128
 from bcrypt import hashpw
 from bcrypt import gensalt
+from datetime import datetime
 
 
-def etag(object: Any) -> str:
-    return xxh128(str(object)).digest().hex()
+def etag(time: datetime) -> str:
+    return xxh128(time.timestamp().hex()).digest().hex()
 
 
 def password(password: str) -> bytes:

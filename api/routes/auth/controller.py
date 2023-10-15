@@ -4,6 +4,7 @@ from litestar import Controller as LitestarController
 from litestar import post
 from litestar import get
 from litestar import patch
+from litestar import delete
 from litestar import Response
 from litestar import Request
 from litestar.middleware.base import DefineMiddleware
@@ -16,6 +17,10 @@ from ...schemas import Resource
 from api.routes.auth.schemas.token import Token
 from .middlewares import BasicAuthentication
 from .middlewares import BearerAuthentication
+
+
+bearer = DefineMiddleware(BearerAuthentication)
+basic = DefineMiddleware(BasicAuthentication)
 
 
 class Controller(LitestarController):
@@ -43,7 +48,7 @@ class Controller(LitestarController):
         path="/",
         tags=["authentication"],
         summary="Authenticate user",
-        middleware=[DefineMiddleware(BasicAuthentication)],
+        middleware=[basic],
     )
     async def fetch(
         self,
@@ -56,7 +61,7 @@ class Controller(LitestarController):
 
     @patch(
         path="/",
-        middleware=[DefineMiddleware(BearerAuthentication)],
+        middleware=[bearer],
     )
     async def patch(
         self,
@@ -75,3 +80,16 @@ class Controller(LitestarController):
         return Response(
             Resource(result),
         )
+
+    @delete(
+        path="/",
+        middleware=[bearer],
+    )
+    async def delete(
+        self,
+        request: Request[models.User, Token, Any],
+    ) -> None:
+        async with Database() as session:
+            async with session.transaction():
+                await session.users.delete(request.user)
+        return

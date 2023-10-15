@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC
-from litestar.connection.base import URL
+from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
 from litestar.connection import ASGIConnection
 from litestar.middleware import AbstractAuthenticationMiddleware

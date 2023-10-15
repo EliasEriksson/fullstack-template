@@ -10,10 +10,11 @@ from api.configuration import ApiConfiguration
 from jose import jwt
 from jose.exceptions import JWSError
 from jose.exceptions import JWKError
+from jose.exceptions import ExpiredSignatureError
 from api.routes.auth.exceptions import TokenDecodeException
 from api.routes.auth.exceptions import TokenEncodeException
 from dataclasses import dataclass
-from litestar.connection.base import URL
+from litestar.datastructures.url import URL
 from . import password
 
 
@@ -101,7 +102,7 @@ class Token(Struct):
                     audience=str(audience),
                 )
             )
-        except JWKError:
+        except (JWKError, ExpiredSignatureError):
             raise TokenDecodeException()
 
     @classmethod
@@ -126,4 +127,5 @@ class Patchable(Struct):
             user.email = self.email
         if self.password is not None:
             user.hash = self.password.hash()
+        user.modified = datetime.now()
         return user

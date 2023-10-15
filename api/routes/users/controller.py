@@ -127,7 +127,10 @@ class Controller(LitestarController):
     async def delete(
         self,
         id: UUID,
+        request: Request[models.User, Token, Any],
     ) -> None:
+        if id == request.user.id:
+            raise ForbiddenException()
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
@@ -135,3 +138,4 @@ class Controller(LitestarController):
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             async with session.transaction():
                 await session.users.delete(current)
+        return

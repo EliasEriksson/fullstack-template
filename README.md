@@ -51,7 +51,7 @@ If neither a command line argument nor an environment variable is present for a 
   ```
 ### Generate secrets
 It is possible to skip this step for development. By default, the configuration will load default public/private keys
-and set the password pepper to an empty string this key guarantees consistency but is also COMPLETELY UNSECURE. 
+and set the password pepper to an empty string. These keys/secrets guarantees consistency but is also COMPLETELY UNSECURE. 
 When running in production mode setting these secrets is required. 
 
 #### JWT public / private keys
@@ -111,17 +111,25 @@ try to implement support for it rather than calling alembic manually.
 - [x] `GET /auth`
 - [x] setup postman
   * [workspace](https://www.postman.com/eliaseriksson/workspace/eliaseriksson-fullstack-template/overview)
-- [ ] creating other users
-- [ ] patching other users
+- [x] creating other users
+- [x] patching other users
+- [x] fully remove self
+- [x] fully remove other user
 - [ ] multiple email addresses per user
-- [ ] fully remove self
-- [ ] fully remove other user
-- [ ] deactivate self
-- [ ] deactivate user
+- [ ] deactivate self?
+- [ ] deactivate user?
   * make password nullable?
   * make active column?
   * password hash of 0 bytes?
+- [ ] refactor exceptions
+- [ ] catch server errors
+  * creating the same user
 - [ ] permissions
 - [ ] roles
+- [ ] cli to create users
+- [ ] creating invites
+  * accepted via `POST /auth/:invite` to create a new user with the invite
+- [ ] configuration to disable `POST /auth`
 - [ ] test all endpoints
+- [ ] add docstrings to functions and methods
 - [ ] email verification?
