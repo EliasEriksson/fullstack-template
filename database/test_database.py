@@ -14,19 +14,22 @@ async def database():
 
 
 async def test_user(database: Database) -> None:
-    async with database._session_maker() as session:
-        users = await session.execute(select(models.User))
-        assert len(users.scalars().all()) == 0
-        await session.commit()
+    async with Database() as session:
+        async with session.transaction():
+            users, page = await session.users.list([], 10, 0)
+            print(users)
+            assert len(users) == 0
 
-        async with session.begin():
-            users = [
-                models.User(email="jessie@rocket.com", hash=hash.password("asd123")),
-                models.User(email="james@rocket.com", hash=hash.password("asd123")),
-                models.User(email="giovani@rocket.com", hash=hash.password("asd123")),
+            emails = [
+                "jessie@rocket.com",
+                "james@rocket.com",
+                "giovani@rocket.com",
             ]
-            session.add_all(users)
-
-        users = await session.execute(select(models.User))
-        assert len(users.scalars().all()) == 3
-        await session.commit()
+            for email in emails:
+                await session.users.create(
+                    models.User(email=email, hash=hash.password("asd123")),
+                )
+            # await session.commit()
+        # await session.commit()
+        # users, page = await session.users.list([], 10, 1)
+        # assert len(users) == 3

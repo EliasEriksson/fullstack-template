@@ -13,3 +13,6 @@ class Session:
 
     def transaction(self) -> AsyncSessionTransaction:
         return self._session.begin()
+
+    async def commit(self) -> None:
+        await self._session.commit()

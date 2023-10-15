@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 
 class Email(Base):
-    __tablename__ = "user"
+    __tablename__ = "email"
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
-    email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
+    address: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
 
     user: Mapped[User] = relationship(back_populates="emails")

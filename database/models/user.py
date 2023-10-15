@@ -17,8 +17,7 @@ if TYPE_CHECKING:
 
 class User(Base):
     __tablename__ = "user"
-    email: Mapped[UUID] = mapped_column(ForeignKey("email.id"))
-    # email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
     hash: Mapped[bytes] = mapped_column(LargeBinary(), nullable=False)
 
     emails: Mapped[list[Email]] = relationship(back_populates="user")
