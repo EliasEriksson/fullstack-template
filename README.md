@@ -1,5 +1,5 @@
 # Fullstack template
-postgres litestar Next.js
+postgres, python + litestar, TypeScript + Next.js
 
 ## Dependencies
 ### Non Python dependencies
