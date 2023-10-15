@@ -1,9 +1,9 @@
+from __future__ import annotations
 from typing import *
-
 from msgspec import Struct
 from database.page import Page
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
 T = TypeVar("T")
 

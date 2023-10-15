@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import *
 import click
 from database import Database
 from database import DatabaseConfiguration
@@ -9,39 +11,34 @@ from alembic import command
 cli = click.Group("database")
 
 
-def database_credentials(command):
+def database_configuration(command):
     options = (
         click.option(
             "--postgres-username",
-            "-u",
             "POSTGRES_USERNAME",
             type=str,
             help="Postgres username.",
         ),
         click.option(
             "--postgres-password",
-            "-p",
             "POSTGRES_PASSWORD",
             type=str,
             help="Postgres password.",
         ),
         click.option(
             "--postgres-database",
-            "-d",
             "POSTGRES_DATABASE",
             type=str,
             help="Postgres database name.",
         ),
         click.option(
             "--postgres-host",
-            "-h",
             "POSTGRES_HOST",
             type=str,
             help="Hostname for Postgres database location.",
         ),
         click.option(
             "--postgres-port",
-            "-P",
             "POSTGRES_PORT",
             type=int,
             help="Port used by the Postgres database server.",
@@ -51,17 +48,17 @@ def database_credentials(command):
 
 
 @cli.command()
-@database_credentials
-def create(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def create(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     database = Database(configuration)
     asyncio.run(database.create())
 
 
 @cli.command()
-@database_credentials
-def delete(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def delete(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     message = (
         f"This operation will delete all tables related to this "
         f"application from the database '{configuration.database}'.\n"
@@ -79,9 +76,9 @@ def delete(**credentials: str | int) -> None:
 
 @cli.command()
 @click.option("--message", "-m", type=str, help="Revision message", default=None)
-@database_credentials
-def revision(message: str | None, **credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def revision(message: str | None, **environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.revision(
         configuration.alembic,
         autogenerate=True,
@@ -90,9 +87,9 @@ def revision(message: str | None, **credentials: str | int) -> None:
 
 
 @cli.command()
-@database_credentials
-def migrate(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def migrate(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     for content in configuration.migrations.iterdir():
         if content.is_file():
             break
@@ -107,66 +104,66 @@ def migrate(**credentials: str | int) -> None:
 
 @cli.command()
 @click.argument("revision", type=str)
-@database_credentials
-def upgrade(revision: str, **credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def upgrade(revision: str, **environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.upgrade(configuration.alembic, revision)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
-@database_credentials
-def downgrade(revision: str, **credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def downgrade(revision: str, **environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.downgrade(configuration.alembic, revision)
 
 
 @cli.command()
-@database_credentials
-def heads(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def heads(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.heads(configuration.alembic)
 
 
 @cli.command()
-@database_credentials
-def check(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def check(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.check(configuration.alembic)
 
 
 @cli.command()
-@database_credentials
-def branches(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def branches(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.branches(configuration.alembic)
 
 
 @cli.command()
-@database_credentials
-def current(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def current(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.current(configuration.alembic)
 
 
 @cli.command()
-@database_credentials
-def ensure_version(**credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def ensure_version(**environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.ensure_version(configuration.alembic)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
-@database_credentials
-def show(revision: str, **credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def show(revision: str, **environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.show(configuration.alembic, revision)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
-@database_credentials
-def stamp(revision: str, **credentials: str | int) -> None:
-    configuration = DatabaseConfiguration(credentials)
+@database_configuration
+def stamp(revision: str, **environment: dict[str, Any]) -> None:
+    configuration = DatabaseConfiguration(environment)
     command.stamp(configuration.alembic, revision)

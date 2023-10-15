@@ -6,24 +6,23 @@ from litestar import post
 from litestar import patch
 from litestar import delete
 from litestar import Response
-from litestar.datastructures import Headers
+from litestar import Request
 from litestar.datastructures import ResponseHeader
 from litestar.params import Parameter
 from litestar.exceptions import NotFoundException
 from litestar.exceptions import ClientException
 from database import Database
+from database import models
 from uuid import UUID
-from ...responses import Resource
-from ...responses import PagedResource
-from ...guards import if_match
-from .responses import User
-from .responses import Creatable
-from .responses import Patchable
+from ...exceptions import ForbiddenException
+from ...exceptions import PreconditionFailedException
+from ...schemas import Resource
+from ...schemas import PagedResource
+from api.routes.users.schemas.users import User
+from api.routes.users.schemas.users import Creatable
+from api.routes.users.schemas.users import Patchable
 from shared import hash
-
-
-class PreconditionFailedException(ClientException):
-    status_code = 412
+from api.routes.auth.schemas.token import Token
 
 
 class Controller(LitestarController):
@@ -91,26 +90,29 @@ class Controller(LitestarController):
 
     @patch(
         "/{id:uuid}",
-        guards=[if_match],
         tags=["user"],
         summary="PATCH User",
     )
     async def patch(
         self,
-        headers: Headers,
         id: UUID,
+        request: Request[models.User, Token, Any],
+        etag: Annotated[str, Parameter(header="If-Match")],
         data: Patchable,
     ) -> Response[Resource[User]]:
-        etag = headers.get("If-match")
+        if id == request.user.id:
+            raise ForbiddenException()
+        if data.password and data.password.new != data.password.repeat:
+            raise ClientException(f"Repeated password not equal to new password.")
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            if hash(current.modified) != etag:
+            if hash.etag(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
-                patched = await session.users.patch(Patchable.patch(current, data))
+                patched = await session.users.patch(data.patch(current))
         result = User.from_model(patched)
         return Response(
             Resource(result),
@@ -125,7 +127,10 @@ class Controller(LitestarController):
     async def delete(
         self,
         id: UUID,
+        request: Request[models.User, Token, Any],
     ) -> None:
+        if id == request.user.id:
+            raise ForbiddenException()
         async with Database() as session:
             async with session.transaction():
                 current = await session.users.fetch(id)
@@ -133,3 +138,4 @@ class Controller(LitestarController):
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             async with session.transaction():
                 await session.users.delete(current)
+        return

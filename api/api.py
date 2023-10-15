@@ -1,6 +1,5 @@
 from __future__ import annotations
 from litestar import Litestar
-from litestar.contrib.sqlalchemy.plugins import SQLAlchemySerializationPlugin
 from . import routes
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi import OpenAPIController

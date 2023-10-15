@@ -2,6 +2,7 @@ import pytest
 from database import models
 from sqlalchemy import select
 from database import Database
+from shared import hash
 
 
 @pytest.fixture
@@ -20,9 +21,9 @@ async def test_user(database: Database) -> None:
 
         async with session.begin():
             users = [
-                models.User(email="jessie@rocket.com"),
-                models.User(email="james@rocket.com"),
-                models.User(email="giovani@rocket.com"),
+                models.User(email="jessie@rocket.com", hash=hash.password("asd123")),
+                models.User(email="james@rocket.com", hash=hash.password("asd123")),
+                models.User(email="giovani@rocket.com", hash=hash.password("asd123")),
             ]
             session.add_all(users)
 
