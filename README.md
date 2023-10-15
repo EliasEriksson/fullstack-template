@@ -117,11 +117,6 @@ try to implement support for it rather than calling alembic manually.
 - [x] fully remove self
 - [x] fully remove other user
 - [ ] multiple email addresses per user
-- [ ] deactivate self?
-- [ ] deactivate user?
-  * make password nullable?
-  * make active column?
-  * password hash of 0 bytes?
 - [ ] refactor exceptions
 - [ ] refactor to top folders backend / frontend / cli / static?
 - [ ] catch server errors
@@ -132,6 +127,11 @@ try to implement support for it rather than calling alembic manually.
 - [ ] creating invites
   * accepted via `POST /auth/:invite` to create a new user with the invite
 - [ ] configuration to disable `POST /auth`
+- [ ] deactivate self?
+- [ ] deactivate user?
+  * make password nullable?
+  * make active column?
+  * password hash of 0 bytes?
 - [ ] test all endpoints
 - [ ] add docstrings to functions and methods
 - [ ] email verification?
