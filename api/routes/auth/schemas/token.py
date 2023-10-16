@@ -126,7 +126,11 @@ class Patchable(Struct):
         # try to move this logic deeper, so it can be shared
         if self.emails is not None:
             existing = {email.address for email in user.emails}
-            new = (models.Email(address=email) for email in self.emails if email not in existing)
+            new = (
+                models.Email(address=email)
+                for email in self.emails
+                if email not in existing
+            )
             keep = (email for email in user.emails if email.address in self.emails)
             user.emails = [*keep, *new]
         if self.password is not None:
