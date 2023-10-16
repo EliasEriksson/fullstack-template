@@ -1,6 +1,5 @@
 import pytest
 from database import models
-from sqlalchemy import select
 from database import Database
 from shared import hash
 
@@ -17,7 +16,6 @@ async def test_user(database: Database) -> None:
     async with Database() as session:
         async with session.transaction():
             users, page = await session.users.list([], 10, 0)
-            print(users)
             assert len(users) == 0
 
             emails = [
@@ -29,7 +27,6 @@ async def test_user(database: Database) -> None:
                 await session.users.create(
                     models.User(email=email, hash=hash.password("asd123")),
                 )
-            # await session.commit()
-        # await session.commit()
-        # users, page = await session.users.list([], 10, 1)
-        # assert len(users) == 3
+            await session.commit()
+        users, page = await session.users.list([], 10, 0)
+        assert len(users) == 3

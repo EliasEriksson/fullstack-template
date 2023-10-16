@@ -15,7 +15,6 @@ class Users:
 
     async def create(self, user: User) -> User:
         self._session.add(user)
-        await self._session.commit()
         return user
 
     async def fetch(self, id: UUID) -> User | None:
@@ -30,10 +29,8 @@ class Users:
 
     async def patch(self, user: User):
         self._session.add(user)
-        await self._session.commit()
         return user
 
     async def delete(self, user: User):
         await self._session.delete(user)
-        await self._session.commit()
         return user
