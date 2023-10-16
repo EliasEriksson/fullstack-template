@@ -134,6 +134,7 @@ try to implement support for it rather than calling alembic manually.
   * password hash of 0 bytes?
 - [ ] test all endpoints
 - [ ] add docstrings to functions and methods
+- [ ] generate new database per test and use multiprocessing for tests to speed up?
 - [ ] email verification?
 ### Frontend
 - [ ] admin CRUD page

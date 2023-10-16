@@ -9,39 +9,40 @@ from ...auth.schemas import password
 
 
 class Creatable(Struct):
-    email: str
+    emails: list[str]
     password: password.Creatable = field(default=None)
 
     @staticmethod
     def create(user: Creatable) -> models.User:
         return models.User(
-            email=user.email,
+            emails=[models.Email(address=email) for email in user.emails],
             hash=user.password.hash(),
         )
 
 
 class User(Base):
-    email: str
+    emails: list[str]
 
     @classmethod
     def from_model(cls, user: models.User) -> User:
-        instance = cls(
+        return cls(
             id=user.id,
             created=user.created,
             modified=user.modified,
-            email=user.email,
+            emails=[email.address for email in user.emails],
             etag=hash.etag(user.modified),
         )
-        return instance
 
 
 class Patchable(Struct):
+    # broken
     email: str | None = field(default=None)
     password: password.Creatable | None = field(default=None)
 
     def patch(self, user: models.User) -> models.User:
+        # database session.merge?
         if self.email is not None:
-            user.email = self.email
+            user.emails = self.email
         if self.password and self.password.new:
             user.hash = self.password.hash()
         user.modified = datetime.now()

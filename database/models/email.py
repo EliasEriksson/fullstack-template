@@ -7,6 +7,9 @@ from sqlalchemy import String
 from sqlalchemy import ForeignKey
 from database.models.base import Base
 from uuid import UUID
+from ..constants import CASCADE
+from ..constants import Cascades
+from ..constants import Lazy
 
 
 if TYPE_CHECKING:
@@ -15,7 +18,18 @@ if TYPE_CHECKING:
 
 class Email(Base):
     __tablename__ = "email"
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
-    address: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete=CASCADE),
+        nullable=False,
+    )
+    address: Mapped[str] = mapped_column(
+        String(),
+        unique=True,
+        nullable=False,
+    )
 
-    user: Mapped[User] = relationship(back_populates="emails")
+    user: Mapped[User] = relationship(
+        back_populates="emails",
+        cascade=Cascades.default(),
+        lazy=Lazy.default(),
+    )

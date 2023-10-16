@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlalchemy import select
 from database.models import User
+from database.models import Email
 from uuid import UUID
 
 
@@ -24,9 +25,14 @@ async def list(
     size: int,
     page: int,
 ) -> Sequence[User]:
-    query = select(User)
-    if emails:
-        query = query.where(User.email.in_(emails))
+    if not emails:
+        query = select(User)
+    else:
+        query = (
+            select(User, Email)
+            .join(User, Email.user_id == User.id)
+            .where(Email.address.in_(emails))
+        )
     query = query.offset(size * page).limit(size)
     result = await session.execute(query)
     return result.scalars().all()

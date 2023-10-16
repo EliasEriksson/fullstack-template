@@ -3,12 +3,11 @@ from typing import *
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from sqlalchemy import String
-from sqlalchemy import ForeignKey
 from sqlalchemy import LargeBinary
 from database.models.base import Base
 from bcrypt import checkpw
-from uuid import UUID
+from ..constants import Cascades
+from ..constants import Lazy
 
 
 if TYPE_CHECKING:
@@ -17,10 +16,16 @@ if TYPE_CHECKING:
 
 class User(Base):
     __tablename__ = "user"
-    email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
-    hash: Mapped[bytes] = mapped_column(LargeBinary(), nullable=False)
+    hash: Mapped[bytes] = mapped_column(
+        LargeBinary(),
+        nullable=False,
+    )
 
-    emails: Mapped[list[Email]] = relationship(back_populates="user")
+    emails: Mapped[list[Email]] = relationship(
+        back_populates="user",
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
 
     def verify(self, password: str) -> bool:
         return checkpw(password.encode(), self.hash)

@@ -32,13 +32,13 @@ class Algorithms:
 
 
 class Creatable(Struct):
-    email: str
+    emails: list[str]
     password: password.Creatable
 
     @staticmethod
     def create(user: Creatable) -> models.User:
         return models.User(
-            email=user.email,
+            emails=[models.Email(address=email) for email in user.emails],
             hash=user.password.hash(),
         )
 
@@ -119,12 +119,16 @@ class Token(Struct):
 
 
 class Patchable(Struct):
-    email: str | None = field(default=None)
+    emails: list[str] | None = field(default=None)
     password: password.Patchable | None = field(default=None)
 
     def patch(self, user: models.User) -> models.User:
-        if self.email is not None:
-            user.email = self.email
+        # try to move this logic deeper, so it can be shared
+        if self.emails is not None:
+            existing = {email.address for email in user.emails}
+            new = (models.Email(address=email) for email in self.emails if email not in existing)
+            keep = (email for email in user.emails if email.address in self.emails)
+            user.emails = [*keep, *new]
         if self.password is not None:
             user.hash = self.password.hash()
         user.modified = datetime.now()

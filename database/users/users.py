@@ -27,10 +27,11 @@ class Users:
         count = await queries.count(self._session)
         return users, Page(size, page, count)
 
-    async def patch(self, user: User):
+    async def patch(self, user: User) -> User:
+        #  breaks
         self._session.add(user)
         return user
 
-    async def delete(self, user: User):
+    async def delete(self, user: User) -> User:
         await self._session.delete(user)
         return user

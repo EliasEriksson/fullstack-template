@@ -2,31 +2,39 @@ import pytest
 from database import models
 from database import Database
 from shared import hash
+from .configuration import DatabaseConfiguration
+from sqlalchemy import literal_column
+from sqlalchemy import select
 
 
 @pytest.fixture
-async def database():
+async def empty_database():
     database = Database()
     await database.create()
     yield database
     await database.delete()
 
 
-async def test_user(database: Database) -> None:
+@pytest.fixture
+async def database(empty_database: Database) -> None:
     async with Database() as session:
         async with session.transaction():
-            users, page = await session.users.list([], 10, 0)
-            assert len(users) == 0
-
             emails = [
-                "jessie@rocket.com",
-                "james@rocket.com",
-                "giovani@rocket.com",
+                models.Email(address="jessie@rocket.com"),
+                models.Email(address="james@rocket.com"),
+                models.Email(address="giovani@rocket.com"),
             ]
             for email in emails:
                 await session.users.create(
-                    models.User(email=email, hash=hash.password("asd123")),
+                    models.User(emails=[email], hash=hash.password("asd123"))
                 )
-            await session.commit()
-        users, page = await session.users.list([], 10, 0)
-        assert len(users) == 3
+    yield empty_database
+
+
+async def test_database(empty_database: Database) -> None:
+    configuration = DatabaseConfiguration()
+    async with empty_database as session:
+        query = select(literal_column("current_user"))
+        result = await session.execute(query)
+        user = result.scalars().one_or_none()
+        assert user == configuration.username
