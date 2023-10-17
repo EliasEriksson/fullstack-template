@@ -1,0 +1,35 @@
+from __future__ import annotations
+from typing import *
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy import Uuid
+from sqlalchemy import ForeignKey
+from database.models.base import Base
+from ..constants import Cascades
+from ..constants import Lazy
+from ..constants import CASCADE
+from ..constants import gen_random_uuid
+from uuid import UUID
+
+if TYPE_CHECKING:
+    from .email import Email
+
+
+class Verification(Base):
+    __tablename__ = "verification"
+    code: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True, native_uuid=True),
+        nullable=False,
+        server_default=gen_random_uuid,
+    )
+    email_id: Mapped[UUID] = mapped_column(
+        ForeignKey("email.id", ondelete=CASCADE),
+        nullable=False,
+    )
+    email: Mapped[Email] = relationship(
+        back_populates="verification",
+        uselist=False,
+        cascade=Cascades.default(),
+        lazy=Lazy.default(),
+    )

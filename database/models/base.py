@@ -4,9 +4,9 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy import Uuid
 from sqlalchemy import DateTime
-from sqlalchemy import text
 from sqlalchemy import func
 from uuid import UUID
+from ..constants import gen_random_uuid
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -14,7 +14,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         Uuid(as_uuid=True, native_uuid=True),
         primary_key=True,
         nullable=False,
-        server_default=text("gen_random_uuid()"),
+        server_default=gen_random_uuid,
     )
     created: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),

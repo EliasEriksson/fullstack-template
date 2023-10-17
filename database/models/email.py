@@ -4,32 +4,39 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import String
-from sqlalchemy import ForeignKey
+from sqlalchemy import Boolean
+from sqlalchemy.sql.expression import false
 from database.models.base import Base
-from uuid import UUID
-from ..constants import CASCADE
 from ..constants import Cascades
 from ..constants import Lazy
-
+from .user_email import UserEmail
 
 if TYPE_CHECKING:
     from .user import User
+    from .verification import Verification
 
 
 class Email(Base):
     __tablename__ = "email"
-    user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("user.id", ondelete=CASCADE),
-        nullable=False,
-    )
     address: Mapped[str] = mapped_column(
         String(),
         unique=True,
         nullable=False,
     )
-
+    verified: Mapped[bool] = mapped_column(
+        Boolean(),
+        nullable=False,
+        server_default=false(),
+    )
+    verification: Mapped[Verification] = relationship(
+        back_populates="email",
+        uselist=False,
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
     user: Mapped[User] = relationship(
         back_populates="emails",
+        secondary=UserEmail.__tablename__,
         cascade=Cascades.default(),
         lazy=Lazy.default(),
     )

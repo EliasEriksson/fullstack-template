@@ -1,6 +1,9 @@
 from __future__ import annotations
+from sqlalchemy import text
 
 CASCADE = "CASCADE"
+
+gen_random_uuid = text("gen_random_uuid()")
 
 
 class Lazy:
