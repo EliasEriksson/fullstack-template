@@ -21,3 +21,6 @@
      * bearer auth
    
   
+## new 
+* user defines password before email is verified but a verified email is required to log in.
+* update the Auth flow above to reflect this
