@@ -8,7 +8,6 @@ from database.models.base import Base
 from bcrypt import checkpw
 from ..constants import Cascades
 from ..constants import Lazy
-from .user_email import UserEmail
 
 if TYPE_CHECKING:
     from .email import Email
@@ -23,7 +22,6 @@ class User(Base):
 
     emails: Mapped[list[Email]] = relationship(
         back_populates="user",
-        secondary=UserEmail.__tablename__,
         cascade=Cascades.default(),
         lazy=Lazy.default(),
     )

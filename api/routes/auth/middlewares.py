@@ -10,6 +10,7 @@ from api.routes.auth.schemas.token import Token
 from .exceptions import TokenDecodeException
 from base64 import b64decode
 import re
+from database import models
 
 
 class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
@@ -47,7 +48,7 @@ class BearerAuthentication(AbstractAuthentication):
         return AuthenticationResult(user=user, auth=token)
 
 
-class BasicAuthentication(AbstractAuthentication):
+class BasicBase(AbstractAuthentication, ABC):
     _authorizationPattern = re.compile(r"^Basic\s(.*)$")
     _credentialsPattern = re.compile(r"^([^:]*):([^:]*)$")
 
@@ -57,9 +58,7 @@ class BasicAuthentication(AbstractAuthentication):
             headers={f"WWW-Authenticate": f'Basic realm="{url.hostname}"'}
         )
 
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
+    async def get_credentials(self, connection: ASGIConnection) -> tuple[str, str]:
         authorization = connection.headers.get(self.header)
         if not authorization:
             raise self.not_authorized(connection.url)
@@ -70,13 +69,45 @@ class BasicAuthentication(AbstractAuthentication):
         credentials = b64decode(encodedCredentials).decode("utf-8")
         if not (match := self._credentialsPattern.search(credentials)):
             raise self.not_authorized(connection.url)
-        if not (email := match.group(1)) or not (password := match.group(2)):
+        if not (address := match.group(1)) or not (password := match.group(2)):
             raise self.not_authorized(connection.url)
+        return address, password
+
+    async def get_user(self, connection: ASGIConnection, address: str) -> models.User:
         async with Database() as session:
             async with session.transaction():
-                users, _ = await session.users.list([email], size=1, page=0)
+                users, _ = await session.users.list([address], size=1, page=0)
         if not users or not (user := users[0]):
             raise self.not_authorized(connection.url)
+        return user
+
+
+class BasicVerificationAuthentication(BasicBase):
+    async def authenticate_request(
+        self,
+        connection: ASGIConnection,
+    ) -> AuthenticationResult:
+        address, password = await self.get_credentials(connection)
+        user = await self.get_user(connection, address)
         if not user.verify(password):
+            raise self.not_authorized(connection.url)
+        return AuthenticationResult(user=user, auth=None)
+
+
+class BasicAuthentication(BasicBase):
+    async def authenticate_request(
+        self,
+        connection: ASGIConnection,
+    ) -> AuthenticationResult:
+        address, password = await self.get_credentials(connection)
+        user = await self.get_user(connection, address)
+        if not user.verify(password):
+            raise self.not_authorized(connection.url)
+        if not any(
+            (
+                email.address == address and email.verification.completed
+                for email in user.emails
+            )
+        ):
             raise self.not_authorized(connection.url)
         return AuthenticationResult(user=user, auth=None)

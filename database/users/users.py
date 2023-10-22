@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User
 from ..page import Page
 from uuid import UUID
+from datetime import datetime
 from . import queries
 
 
@@ -23,12 +24,12 @@ class Users:
     async def list(
         self, emails: list[str], size: int, page: int
     ) -> tuple[Sequence[User], Page]:
-        users = await queries.list(self._session, emails, size, page)
-        count = await queries.count(self._session)
-        return users, Page(size, page, count)
+        result = await queries.list(self._session, emails, size, page)
+        count = await queries.count(self._session, emails)
+        return result, Page(size, page, count)
 
     async def patch(self, user: User) -> User:
-        #  breaks
+        user.modified = datetime.now()
         self._session.add(user)
         return user
 

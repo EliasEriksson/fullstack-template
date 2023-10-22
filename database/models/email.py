@@ -5,11 +5,13 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import String
 from sqlalchemy import Boolean
+from sqlalchemy import ForeignKey
 from sqlalchemy.sql.expression import false
 from database.models.base import Base
 from ..constants import Cascades
 from ..constants import Lazy
-from .user_email import UserEmail
+from ..constants import CASCADE
+from uuid import UUID
 
 if TYPE_CHECKING:
     from .user import User
@@ -23,20 +25,17 @@ class Email(Base):
         unique=True,
         nullable=False,
     )
-    verified: Mapped[bool] = mapped_column(
-        Boolean(),
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete=CASCADE),
         nullable=False,
-        server_default=false(),
     )
     verification: Mapped[Verification] = relationship(
         back_populates="email",
-        uselist=False,
         cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),
     )
     user: Mapped[User] = relationship(
         back_populates="emails",
-        secondary=UserEmail.__tablename__,
         cascade=Cascades.default(),
         lazy=Lazy.default(),
     )

@@ -10,9 +10,15 @@ async def database(empty_database: Database) -> None:
     async with empty_database as session:
         async with session.transaction():
             emails = [
-                models.Email(address="jessie@rocket.com"),
-                models.Email(address="james@rocket.com"),
-                models.Email(address="giovani@rocket.com"),
+                models.Email(
+                    address="jessie@rocket.com", verification=models.Verification()
+                ),
+                models.Email(
+                    address="james@rocket.com", verification=models.Verification()
+                ),
+                models.Email(
+                    address="giovani@rocket.com", verification=models.Verification()
+                ),
             ]
             for email in emails:
                 await session.users.create(
