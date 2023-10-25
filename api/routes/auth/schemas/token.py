@@ -24,6 +24,7 @@ class Claims:
     expires = "exp"
     issued = "iss"
     audience = "aud"
+    refresh_token = "rft"
 
 
 @dataclass
@@ -38,7 +39,10 @@ class Creatable(Struct):
     @staticmethod
     def create(user: Creatable) -> models.User:
         return models.User(
-            emails=[models.Email(address=email) for email in user.emails],
+            emails=[
+                models.Email(address=email, verification=models.Verification())
+                for email in user.emails
+            ],
             hash=user.password.create_hash(),
         )
 
@@ -46,6 +50,7 @@ class Creatable(Struct):
 class Token(Struct):
     audience: str
     subject: UUID
+    refresh_token: str | None
     expires: datetime
     issued: datetime
 
@@ -61,6 +66,7 @@ class Token(Struct):
         return {
             Claims.audience: self.audience,
             Claims.subject: str(self.subject),
+            Claims.refresh_token: self.refresh_token,
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }
@@ -86,6 +92,7 @@ class Token(Struct):
         return cls(
             audience=token[Claims.audience],
             subject=UUID(token[Claims.subject]),
+            refresh_token=token[Claims.refresh_token],
             expires=datetime.fromtimestamp(token[Claims.expires]),
             issued=datetime.fromtimestamp(token[Claims.issued]),
         )
@@ -106,14 +113,15 @@ class Token(Struct):
             raise TokenDecodeException()
 
     @classmethod
-    def encode_model(cls, user: models.User, audience: str | URL) -> str:
+    def encode_model(cls, user: models.User, audience: str | URL, refresh_token: str | None = None) -> str:
         now = cls._issued()
         return cls.encode(
             cls(
+                audience=str(audience),
                 subject=user.id,
+                refresh_token=refresh_token,
                 expires=now + timedelta(minutes=20),
                 issued=cls._expires(now),
-                audience=str(audience),
             )
         )
 

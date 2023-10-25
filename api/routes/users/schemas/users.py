@@ -10,7 +10,7 @@ from ...auth.schemas import password
 
 class Creatable(Struct):
     emails: list[str]
-    password: password.Creatable = field(default=None)
+    password: password.Creatable
 
     @staticmethod
     def create(user: Creatable) -> models.User:

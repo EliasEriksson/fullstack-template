@@ -7,6 +7,7 @@ from litestar import patch
 from litestar import delete
 from litestar import Response
 from litestar import Request
+from litestar.params import Parameter
 from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
 from database import Database
@@ -17,10 +18,12 @@ from ...schemas import Resource
 from api.routes.auth.schemas.token import Token
 from .middlewares import BasicUsernamePasswordAuthentication
 from .middlewares import BearerAuthentication
+from .middlewares import BasicUsernamePasswordUnverifiedAuthentication
 
 
 bearer = DefineMiddleware(BearerAuthentication)
-basic = DefineMiddleware(BasicUsernamePasswordAuthentication)
+basic_verified = DefineMiddleware(BasicUsernamePasswordAuthentication)
+basic_unverified = DefineMiddleware(BasicUsernamePasswordUnverifiedAuthentication)
 
 
 class Controller(LitestarController):
@@ -33,28 +36,52 @@ class Controller(LitestarController):
     )
     async def create(
         self,
-        request: Request[None, None, Any],
         data: Creatable,
-    ) -> Response[Resource[str]]:
+    ) -> Response[None]:
         async with Database() as session:
             async with session.transaction():
                 created = await session.users.create(Creatable.create(data))
-        result = Token.encode_model(created, request.base_url)
-        return Response(
-            Resource(result),
-        )
+        for email in created.emails:
+            print(f"email to {email.address}: verification: {email.verification.code}")
+        return Response(status_code=204, content=None)
 
     @get(
         path="/",
         tags=["authentication"],
         summary="Authenticate user",
-        middleware=[basic],
+        middleware=[basic_verified],
     )
     async def fetch(
         self,
         request: Request[models.User, None, Any],
     ) -> Response[Resource[str]]:
         result = Token.encode_model(request.user, request.base_url)
+        return Response(
+            Resource(result),
+        )
+
+    @get(
+        path="/{verification:uuid}",
+        middleware=[basic_unverified],
+    )
+    async def verify(
+        self,
+        request: Request[models.User, models.Email, Any],
+        agent: Annotated[str, Parameter(header="User-Agent")],
+    ) -> Response[Resource[Token]]:
+        async with Database() as session:
+            async with session.transaction():
+                refresh_token = models.Session.generate_token()
+                user_session = models.Session(
+                    user=request.user,
+                    hash=models.Session.create_hash(refresh_token),
+                    host=request.client.host,
+                    agent=agent,
+                )
+                request.auth.verification.completed = True
+                await session.sessions.create(user_session)
+                await session.emails.create(request.auth)
+        result = Token.encode_model(request.user, request.base_url, refresh_token)
         return Response(
             Resource(result),
         )

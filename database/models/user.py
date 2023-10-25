@@ -12,6 +12,7 @@ from ..constants import Lazy
 
 if TYPE_CHECKING:
     from .email import Email
+    from .session import Session
 
 
 class User(Base):
@@ -22,6 +23,11 @@ class User(Base):
     )
 
     emails: Mapped[list[Email]] = relationship(
+        back_populates="user",
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
+    sessions: Mapped[list[Session]] = relationship(
         back_populates="user",
         cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),

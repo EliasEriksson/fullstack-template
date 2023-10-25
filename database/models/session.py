@@ -7,6 +7,7 @@ from sqlalchemy import String
 from sqlalchemy import LargeBinary
 from sqlalchemy import ForeignKey
 from sqlalchemy import DateTime
+from sqlalchemy import UniqueConstraint
 from uuid import UUID
 from secrets import token_urlsafe
 from datetime import datetime
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 
 class Session(Base):
     __tablename__ = "session"
+    __table_args__ = (UniqueConstraint("user_id", "agent", "host"),)
     hash: Mapped[bytes] = mapped_column(
         LargeBinary(),
         nullable=False,

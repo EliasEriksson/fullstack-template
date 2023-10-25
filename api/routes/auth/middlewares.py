@@ -93,6 +93,26 @@ class BasicUserRefreshTokenAuthentication(BasicBase):
         return AuthenticationResult(user=user, auth=None)
 
 
+class BasicUsernamePasswordUnverifiedAuthentication(BasicBase):
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        address, password = await self.get_credentials(connection)
+        async with Database() as session:
+            user = await session.users.fetch_by_email(address)
+        if not user:
+            raise self.not_authorized(connection.url)
+        if not user.verify(password):
+            raise self.not_authorized(connection.url)
+        email: models.Email | None = next(
+            (email for email in user.emails if email.address == address), None
+        )
+        if email.verification.completed:
+            # maybe bad request instead?
+            raise self.not_authorized(connection.url)
+        return AuthenticationResult(user=user, auth=email)
+
+
 class BasicUsernamePasswordAuthentication(BasicBase):
     async def authenticate_request(
         self,
@@ -105,11 +125,9 @@ class BasicUsernamePasswordAuthentication(BasicBase):
             raise self.not_authorized(connection.url)
         if not user.verify(password):
             raise self.not_authorized(connection.url)
-        if not any(
-            (
-                email.address == address and email.verification.completed
-                for email in user.emails
-            )
-        ):
+        email: models.Email | None = next(
+            (email for email in user.emails if email.address == address), None
+        )
+        if not email.verification.completed:
             raise self.not_authorized(connection.url)
-        return AuthenticationResult(user=user, auth=None)
+        return AuthenticationResult(user=user, auth=email)
