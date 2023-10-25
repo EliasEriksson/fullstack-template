@@ -52,8 +52,8 @@ class Session(Base):
         lazy=Lazy.default(),
     )
 
-    def verify(self, token: str) -> bool:
-        return checkpw(token.encode(), self.hash)
+    def verify(self, user: str, token: str) -> bool:
+        return self.user_id == user and checkpw(token.encode(), self.hash)
 
     @staticmethod
     def generate_token() -> str:

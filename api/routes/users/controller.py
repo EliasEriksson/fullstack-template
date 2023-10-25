@@ -57,7 +57,7 @@ class Controller(LitestarController):
     ) -> Response[Resource[User]]:
         async with Database() as session:
             async with session.transaction():
-                result = User.from_model(await session.users.fetch(id))
+                result = User.from_model(await session.users.fetch_by_id(id))
         if not result:
             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
         return Response(
@@ -106,7 +106,7 @@ class Controller(LitestarController):
             raise ClientException(f"Repeated password not equal to new password.")
         async with Database() as session:
             async with session.transaction():
-                current = await session.users.fetch(id)
+                current = await session.users.fetch_by_id(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             if hash.etag(current.modified) != etag:
@@ -133,7 +133,7 @@ class Controller(LitestarController):
             raise ForbiddenException()
         async with Database() as session:
             async with session.transaction():
-                current = await session.users.fetch(id)
+                current = await session.users.fetch_by_id(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             async with session.transaction():

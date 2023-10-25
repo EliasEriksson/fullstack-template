@@ -53,7 +53,7 @@ async def test_fetch(database: Database) -> None:
     async with database as session:
         users, page = await session.users.list([], 3, 0)
         assert len(users) == 3
-        fetched = [await session.users.fetch(user.id) for user in users]
+        fetched = [await session.users.fetch_by_id(user.id) for user in users]
         assert any(
             (
                 "jessie@rocket.com" in [email.address for email in user.emails]

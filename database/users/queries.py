@@ -9,7 +9,7 @@ from database.models import Verification
 from uuid import UUID
 
 
-async def fetch(
+async def fetch_by_id(
     session: AsyncSession,
     id: UUID,
 ) -> User | None:
@@ -18,42 +18,43 @@ async def fetch(
     return result.scalars().one_or_none()
 
 
+async def fetch_by_email(session: AsyncSession, email: str) -> User | None:
+    query = (
+        select(User, Email)
+        .where(Email.address == email)
+        .outerjoin(Email, Email.user_id == User.id)
+    )
+    result = await session.execute(query)
+    return result.scalars().one_or_none()
+
+
 async def list(
     session: AsyncSession,
-    emails: List[str],
-    size: int,
-    page: int,
+    emails: List[str] | None = None,
+    size: int = 1,
+    page: int = 0,
 ) -> Sequence[User]:
-    if not emails:
-        query = (
-            select(User, Email, Verification)
-            .outerjoin(Email, Email.user_id == User.id)
-            .join(Verification, Verification.email_id == Email.id)
-        )
-    else:
-        query = (
-            select(User, Email, Verification)
-            .where(Email.address.in_(emails))
-            .outerjoin(Email, Email.user_id == User.id)
-            .join(Verification, Verification.email_id == Email.id)
-        )
-    query = query.offset(size * page).limit(size)
+    query = select(User, Email, Verification)
+    if emails is not None:
+        query = query.where(Email.address.in_(emails))
+    query = (
+        query.outerjoin(Email, Email.user_id == User.id)
+        .join(Verification, Verification.email_id == Email.id)
+        .offset(size * page)
+        .limit(size)
+    )
     result = await session.execute(query)
     return result.scalars().all()
 
 
 async def count(
     session: AsyncSession,
-    emails: List[str],
+    emails: List[str] | None = None,
 ) -> int:
-    if not emails:
-        query = select(func.count()).select_from(User)
-    else:
-        query = (
-            select(func.count())
-            .select_from(User)
-            .where(Email.address.in_(emails))
-            .outerjoin(Email, Email.user_id == User.id)
+    query = select(func.count()).select_from(User)
+    if emails is not None:
+        query = query.where(Email.address.in_(emails)).outerjoin(
+            Email, Email.user_id == User.id
         )
     result = await session.execute(query)
     return result.scalars().one()

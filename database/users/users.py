@@ -18,8 +18,11 @@ class Users:
         self._session.add(user)
         return user
 
-    async def fetch(self, id: UUID) -> User | None:
-        return await queries.fetch(self._session, id)
+    async def fetch_by_id(self, id: UUID) -> User | None:
+        return await queries.fetch_by_id(self._session, id)
+
+    async def fetch_by_email(self, email: str) -> User | None:
+        return await queries.fetch_by_email(self._session, email)
 
     async def list(
         self, emails: list[str], size: int, page: int

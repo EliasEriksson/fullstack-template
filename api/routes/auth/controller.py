@@ -15,12 +15,12 @@ from .schemas.token import Creatable
 from .schemas.token import Patchable
 from ...schemas import Resource
 from api.routes.auth.schemas.token import Token
-from .middlewares import BasicAuthentication
+from .middlewares import BasicUsernamePasswordAuthentication
 from .middlewares import BearerAuthentication
 
 
 bearer = DefineMiddleware(BearerAuthentication)
-basic = DefineMiddleware(BasicAuthentication)
+basic = DefineMiddleware(BasicUsernamePasswordAuthentication)
 
 
 class Controller(LitestarController):
