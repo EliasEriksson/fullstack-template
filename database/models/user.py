@@ -4,8 +4,9 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import LargeBinary
-from database.models.base import Base
+from .base import Base
 from bcrypt import checkpw
+from shared import hash
 from ..constants import Cascades
 from ..constants import Lazy
 
@@ -22,9 +23,13 @@ class User(Base):
 
     emails: Mapped[list[Email]] = relationship(
         back_populates="user",
-        cascade=Cascades.default(),
+        cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),
     )
 
     def verify(self, password: str) -> bool:
         return checkpw(password.encode(), self.hash)
+
+    @staticmethod
+    def create_hash(password: str) -> bytes:
+        return hash.password(password)

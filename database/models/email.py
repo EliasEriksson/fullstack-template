@@ -4,14 +4,12 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import String
-from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
-from sqlalchemy.sql.expression import false
-from database.models.base import Base
+from uuid import UUID
+from .base import Base
 from ..constants import Cascades
 from ..constants import Lazy
 from ..constants import CASCADE
-from uuid import UUID
 
 if TYPE_CHECKING:
     from .user import User

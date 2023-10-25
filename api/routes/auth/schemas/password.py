@@ -1,13 +1,13 @@
 from __future__ import annotations
 from msgspec import Struct
-from shared import hash
+from database import models
 
 
 class Password(Struct):
     new: str
 
-    def hash(self) -> bytes:
-        return hash.password(self.new)
+    def create_hash(self) -> bytes:
+        return models.User.create_hash(self.new)
 
 
 class Creatable(Password):

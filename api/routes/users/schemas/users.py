@@ -16,7 +16,7 @@ class Creatable(Struct):
     def create(user: Creatable) -> models.User:
         return models.User(
             emails=[models.Email(address=email) for email in user.emails],
-            hash=user.password.hash(),
+            hash=user.password.create_hash(),
         )
 
 
@@ -44,6 +44,6 @@ class Patchable(Struct):
         if self.email is not None:
             user.emails = self.email
         if self.password and self.password.new:
-            user.hash = self.password.hash()
+            user.hash = self.password.create_hash()
         user.modified = datetime.now()
         return user

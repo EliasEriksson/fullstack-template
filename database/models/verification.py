@@ -1,18 +1,18 @@
 from __future__ import annotations
 from typing import *
+from sqlalchemy.sql.expression import false
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import Uuid
 from sqlalchemy import ForeignKey
 from sqlalchemy import Boolean
-from sqlalchemy.sql.expression import false
-from database.models.base import Base
+from uuid import UUID
+from .base import Base
 from ..constants import Cascades
 from ..constants import Lazy
 from ..constants import CASCADE
 from ..constants import gen_random_uuid
-from uuid import UUID
 
 if TYPE_CHECKING:
     from .email import Email
