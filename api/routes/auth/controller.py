@@ -14,11 +14,11 @@ from .schemas.token import Creatable
 from ...schemas import Resource
 from api.routes.auth.schemas.token import Token
 from .middlewares import BasicUsernamePasswordAuthentication
-from .middlewares import JwtAuthentication
+from .middlewares import BearerJwtAuthentication
 from .middlewares import BasicUsernamePasswordVerificationAuthentication
 
 
-bearer = DefineMiddleware(JwtAuthentication)
+bearer = DefineMiddleware(BearerJwtAuthentication)
 basic = DefineMiddleware(BasicUsernamePasswordAuthentication)
 
 

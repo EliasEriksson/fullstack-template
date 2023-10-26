@@ -41,7 +41,11 @@ class Users:
         return await queries.fetch_by_email(self._session, email)
 
     async def list(
-        self, emails: list[str], size: int, page: int
+        self,
+        size: int,
+        page: int,
+        *,
+        emails: List[str] | None = None,
     ) -> tuple[Sequence[User], Page]:
         result = await queries.list(self._session, emails, size, page)
         count = await queries.count(self._session, emails)

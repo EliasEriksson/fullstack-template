@@ -68,7 +68,7 @@ class Token(Struct):
         return {
             Claims.audience: self.audience,
             Claims.subject: str(self.subject),
-            Claims.refresh_token: self.refresh_token,
+            **({Claims.refresh_token: self.refresh_token} if self.refresh_token is not None else {}),
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }

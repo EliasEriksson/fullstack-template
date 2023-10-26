@@ -73,14 +73,13 @@ class Controller(LitestarController):
     @get("/", tags=["user"], summary="GET Users")
     async def list(
         self,
-        email: list[str] | None,
+        email: list[str] | None = None,
         size: Annotated[int, Parameter(gt=0)] = 10,
         page: Annotated[int, Parameter(ge=0)] = 0,
     ) -> Response[PagedResource[User]]:
-        emails = [] if not email else email
         async with Database() as session:
             async with session.transaction():
-                result, page = await session.users.list(emails, size, page)
+                result, page = await session.users.list(size, page, emails=email)
         return Response(
             PagedResource(
                 [User.from_model(user) for user in result],
@@ -88,54 +87,54 @@ class Controller(LitestarController):
             )
         )
 
-    @patch(
-        "/{id:uuid}",
-        tags=["user"],
-        summary="PATCH User",
-    )
-    async def patch(
-        self,
-        id: UUID,
-        request: Request[models.User, Token, Any],
-        etag: Annotated[str, Parameter(header="If-Match")],
-        data: Patchable,
-    ) -> Response[Resource[User]]:
-        if id == request.user.id:
-            raise ForbiddenException()
-        if data.password and data.password.new != data.password.repeat:
-            raise ClientException(f"Repeated password not equal to new password.")
-        async with Database() as session:
-            async with session.transaction():
-                current = await session.users.fetch_by_id(id)
-            if not current:
-                raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            if hash.etag(current.modified) != etag:
-                raise PreconditionFailedException(f"This user already changed.")
-            async with session.transaction():
-                patched = await session.users.patch(data.patch(current))
-        result = User.from_model(patched)
-        return Response(
-            Resource(result),
-            headers=[ResponseHeader(name="ETag", value=result.etag)],
-        )
+    # @patch(
+    #     "/{id:uuid}",
+    #     tags=["user"],
+    #     summary="PATCH User",
+    # )
+    # async def patch(
+    #     self,
+    #     id: UUID,
+    #     request: Request[models.User, Token, Any],
+    #     etag: Annotated[str, Parameter(header="If-Match")],
+    #     data: Patchable,
+    # ) -> Response[Resource[User]]:
+    #     if id == request.user.id:
+    #         raise ForbiddenException()
+    #     if data.password and data.password.new != data.password.repeat:
+    #         raise ClientException(f"Repeated password not equal to new password.")
+    #     async with Database() as session:
+    #         async with session.transaction():
+    #             current = await session.users.fetch_by_id(id)
+    #         if not current:
+    #             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+    #         if hash.etag(current.modified) != etag:
+    #             raise PreconditionFailedException(f"This user already changed.")
+    #         async with session.transaction():
+    #             patched = await session.users.patch(data.patch(current))
+    #     result = User.from_model(patched)
+    #     return Response(
+    #         Resource(result),
+    #         headers=[ResponseHeader(name="ETag", value=result.etag)],
+    #     )
 
-    @delete(
-        "/{id:uuid}",
-        tags=["user"],
-        summary="Delete User",
-    )
-    async def delete(
-        self,
-        id: UUID,
-        request: Request[models.User, Token, Any],
-    ) -> None:
-        if id == request.user.id:
-            raise ForbiddenException()
-        async with Database() as session:
-            async with session.transaction():
-                current = await session.users.fetch_by_id(id)
-            if not current:
-                raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            async with session.transaction():
-                await session.users.delete(current)
-        return
+    # @delete(
+    #     "/{id:uuid}",
+    #     tags=["user"],
+    #     summary="Delete User",
+    # )
+    # async def delete(
+    #     self,
+    #     id: UUID,
+    #     request: Request[models.User, Token, Any],
+    # ) -> None:
+    #     if id == request.user.id:
+    #         raise ForbiddenException()
+    #     async with Database() as session:
+    #         async with session.transaction():
+    #             current = await session.users.fetch_by_id(id)
+    #         if not current:
+    #             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+    #         async with session.transaction():
+    #             await session.users.delete(current)
+    #     return

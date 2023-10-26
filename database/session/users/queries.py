@@ -43,7 +43,7 @@ async def list(
     size: int = 1,
     page: int = 0,
 ) -> Sequence[User]:
-    query = select(User, Email, Verification, Session)
+    query = select(User, Email, Verification)
     if emails is not None:
         query = query.where(Email.address.in_(emails))
     query = (

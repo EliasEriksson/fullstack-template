@@ -40,7 +40,7 @@ class BearerBase(AbstractAuthentication, ABC):
         return token
 
 
-class JwtAuthentication(BearerBase):
+class BearerJwtAuthentication(BearerBase):
     async def authenticate_request(
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
