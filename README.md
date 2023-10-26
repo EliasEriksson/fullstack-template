@@ -112,11 +112,15 @@ try to implement support for it rather than calling alembic manually.
 - [x] `GET /auth`
 - [x] setup postman
   * [workspace](https://www.postman.com/eliaseriksson/workspace/eliaseriksson-fullstack-template/overview)
-- [x] creating other users
-- [x] patching other users
-- [x] fully remove self
-- [x] fully remove other user
-- [ ] multiple email addresses per user
+- [ ] creating other users
+- [ ] patching other users
+- [ ] fully remove self
+- [ ] fully remove other user
+- [x] "email" validation via print
+- [x] multiple email addresses per user
+- [ ] figure out pattern for delete
+- [ ] figure out pattern for patch
+    * triggers and procedures to keep modified up to date?
 - [ ] refactor exceptions
 - [ ] refactor to top folders backend / frontend / cli / static?
 - [ ] catch server errors
