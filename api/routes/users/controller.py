@@ -118,23 +118,22 @@ class Controller(LitestarController):
     #         headers=[ResponseHeader(name="ETag", value=result.etag)],
     #     )
 
-    # @delete(
-    #     "/{id:uuid}",
-    #     tags=["user"],
-    #     summary="Delete User",
-    # )
-    # async def delete(
-    #     self,
-    #     id: UUID,
-    #     request: Request[models.User, Token, Any],
-    # ) -> None:
-    #     if id == request.user.id:
-    #         raise ForbiddenException()
-    #     async with Database() as session:
-    #         async with session.transaction():
-    #             current = await session.users.fetch_by_id(id)
-    #         if not current:
-    #             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-    #         async with session.transaction():
-    #             await session.users.delete(current)
-    #     return
+    @delete(
+        "/{id:uuid}",
+        tags=["user"],
+        summary="Delete User",
+    )
+    async def delete(
+        self,
+        id: UUID,
+        request: Request[models.User, Token, Any],
+    ) -> None:
+        if id == request.user.id:
+            raise ForbiddenException()
+        async with Database() as session:
+            async with session.transaction():
+                current = await session.users.fetch_by_id(id)
+            if not current:
+                raise NotFoundException(detail=f"No user with id: '{id}' exists.")
+            await session.users.delete(current)
+        return

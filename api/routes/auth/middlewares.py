@@ -182,6 +182,8 @@ class BasicRefreshTokenAuthentication(BasicBase):
         async with Database() as session:
             async with session.transaction():
                 user = await session.users.fetch_by_id(UUID(user_id))
+        if not user:
+            raise self.not_authorized(connection.url)
         user_session: models.Session | None = next(
             (
                 session

@@ -68,7 +68,11 @@ class Token(Struct):
         return {
             Claims.audience: self.audience,
             Claims.subject: str(self.subject),
-            **({Claims.refresh_token: self.refresh_token} if self.refresh_token is not None else {}),
+            **(
+                {Claims.refresh_token: self.refresh_token}
+                if self.refresh_token is not None
+                else {}
+            ),
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }
@@ -94,7 +98,7 @@ class Token(Struct):
         return cls(
             audience=token[Claims.audience],
             subject=UUID(token[Claims.subject]),
-            refresh_token=token[Claims.refresh_token],
+            refresh_token=token.get(Claims.refresh_token),
             expires=datetime.fromtimestamp(token[Claims.expires]),
             issued=datetime.fromtimestamp(token[Claims.issued]),
         )
@@ -128,24 +132,3 @@ class Token(Struct):
                 issued=cls._expires(now),
             )
         )
-
-
-class Patchable(Struct):
-    emails: list[str] | None = field(default=None)
-    password: password.Patchable | None = field(default=None)
-
-    def patch(self, user: models.User) -> models.User:
-        # try to move this logic deeper, so it can be shared
-        if self.emails is not None:
-            existing = {email.address for email in user.emails}
-            new = (
-                models.Email(address=email)
-                for email in self.emails
-                if email not in existing
-            )
-            keep = (email for email in user.emails if email.address in self.emails)
-            user.emails = [*keep, *new]
-        if self.password is not None:
-            user.hash = self.password.create_hash()
-        user.modified = datetime.now()
-        return user

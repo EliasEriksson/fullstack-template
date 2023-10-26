@@ -3,15 +3,18 @@ from typing import *
 from litestar import Controller as LitestarController
 from litestar import post
 from litestar import get
+from litestar import patch
 from litestar import delete
 from litestar import Response
 from litestar import Request
+from litestar.exceptions import ClientException
 from litestar.datastructures import State
 from litestar.middleware.base import DefineMiddleware
 from database import Database
 from database import models
 from .schemas.token import Creatable
 from ...schemas import Resource
+from .schemas.user import Patchable
 from api.routes.auth.schemas.token import Token
 from .middlewares import BasicUsernamePasswordAuthentication
 from .middlewares import BearerJwtAuthentication
@@ -49,7 +52,7 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, models.Email, State],
     ) -> Response[Resource[str]]:
-        refresh_token = request.state.get(
+        refresh_token = request.state.pop(
             BasicUsernamePasswordVerificationAuthentication.Scope.State.refresh_token
         )
         result = Token.encode_model(request.user, request.base_url, refresh_token)
@@ -67,7 +70,7 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, None, State],
     ) -> Response[Resource[str]]:
-        refresh_token = request.state.get(
+        refresh_token = request.state.pop(
             BasicUsernamePasswordAuthentication.Scope.State.refresh_token
         )
         result = Token.encode_model(request.user, request.base_url, refresh_token)
@@ -75,38 +78,31 @@ class Controller(LitestarController):
             Resource(result),
         )
 
-    # @patch(
-    #     path="/",
-    #     middleware=[bearer],
-    # )
-    # async def patch(
-    #     self,
-    #     request: Request[models.User, Token, State],
-    #     data: Patchable,
-    # ) -> Response[Resource[str]]:
-    #     if data.password:
-    #         if data.password.new != data.password.repeat:
-    #             raise ClientException("Repeated password not equal to new password.")
-    #         if not request.user.verify(data.password.old):
-    #             raise ClientException("Password missmatch.")
-    #     async with Database() as session:
-    #         async with session.transaction():
-    #             data.patch()
-    #             patched = await session.users.patch(data.patch(request.user))
-    #     result = Token.encode_model(patched, request.base_url)
-    #     return Response(
-    #         Resource(result),
-    #     )
+    @patch(
+        path="/",
+        middleware=[bearer],
+    )
+    async def patch(
+        self,
+        request: Request[models.User, Token, State],
+        data: Patchable,
+    ) -> Response[Resource[str]]:
+        async with Database() as session:
+            patched = await data.patch(session, request.user)
+        result = Token.encode_model(patched, request.base_url)
+        return Response(
+            Resource(result),
+        )
 
-    # @delete(
-    #     path="/",
-    #     middleware=[bearer],
-    # )
-    # async def delete(
-    #     self,
-    #     request: Request[models.User, Token, State],
-    # ) -> None:
-    #     async with Database() as session:
-    #         async with session.transaction():
-    #             await session.users.delete(request.user)
-    #     return
+    @delete(
+        path="/",
+        middleware=[bearer],
+    )
+    async def delete(
+        self,
+        request: Request[models.User, Token, State],
+    ) -> None:
+        async with Database() as session:
+            async with session.transaction():
+                await session.users.delete(request.user)
+        return

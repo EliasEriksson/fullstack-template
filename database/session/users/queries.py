@@ -22,7 +22,7 @@ async def fetch_by_id(
         .outerjoin(Session, Session.user_id == User.id)
     )
     result = await session.execute(query)
-    return result.scalars().one_or_none()
+    return result.scalars().first()
 
 
 async def fetch_by_email(session: AsyncSession, email: str) -> User | None:
@@ -34,7 +34,7 @@ async def fetch_by_email(session: AsyncSession, email: str) -> User | None:
         .outerjoin(Session, Session.user_id == User.id)
     )
     result = await session.execute(query)
-    return result.scalars().one_or_none()
+    return result.scalars().first()
 
 
 async def list(
@@ -52,9 +52,11 @@ async def list(
         .outerjoin(Session, Session.user_id == User.id)
         .offset(size * page)
         .limit(size)
+        .distinct()
     )
     result = await session.execute(query)
-    return result.scalars().all()
+
+    return result.scalars().unique(lambda user: user[0].id).all()
 
 
 async def count(
