@@ -5,13 +5,14 @@ from litestar.exceptions import NotAuthorizedException
 from litestar.connection import ASGIConnection
 from litestar.middleware import AbstractAuthenticationMiddleware
 from litestar.middleware import AuthenticationResult
-from api.routes.auth.schemas.token import Token
+from .schemas.token import Token
 from base64 import b64decode
 import re
 from .exceptions import TokenDecodeException
 from database import Database
 from database import models
 from uuid import UUID
+from dataclasses import dataclass
 
 
 class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
@@ -19,7 +20,7 @@ class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
     user_agent = "User-Agent"
 
 
-class BearerAuthentication(AbstractAuthentication):
+class BearerBase(AbstractAuthentication, ABC):
     _authorizationPattern = re.compile(r"^Bearer\s(.*)$")
 
     @staticmethod
@@ -28,16 +29,22 @@ class BearerAuthentication(AbstractAuthentication):
             headers={f"WWW-Authenticate": f'Bearer realm="{url.hostname}"'}
         )
 
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
+    async def get_token(self, connection: ASGIConnection) -> str:
         authorization = connection.headers.get(self.authorization)
         if not authorization:
             raise self.not_authorized(connection.url)
         if not (match := self._authorizationPattern.search(authorization)):
             raise self.not_authorized(connection.url)
-        if not (jwt := match.group(1)):
+        if not (token := match.group(1)):
             raise self.not_authorized(connection.url)
+        return token
+
+
+class JwtAuthentication(BearerBase):
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        jwt = await self.get_token(connection)
         try:
             token = Token.decode(jwt, connection.base_url)
         except TokenDecodeException:
@@ -76,58 +83,113 @@ class BasicBase(AbstractAuthentication, ABC):
         return username, secret
 
 
-class BasicUserRefreshTokenAuthentication(BasicBase):
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
-        user_id, token = await self.get_credentials(connection)
-        async with Database() as session:
-            user_session = await session.sessions.fetch(
-                connection.client.host, connection.headers.get(self.user_agent) or ""
-            )
-            if not user_session.verify(user_id, token):
-                raise self.not_authorized(connection.url)
-            user = await session.users.fetch_by_id(UUID(user_id))
-        if not user:
-            raise self.not_authorized(connection.url)
-        return AuthenticationResult(user=user, auth=None)
-
-
-class BasicUsernamePasswordUnverifiedAuthentication(BasicBase):
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
-        address, password = await self.get_credentials(connection)
-        async with Database() as session:
-            user = await session.users.fetch_by_email(address)
-        if not user:
-            raise self.not_authorized(connection.url)
-        if not user.verify(password):
-            raise self.not_authorized(connection.url)
-        email: models.Email | None = next(
-            (email for email in user.emails if email.address == address), None
-        )
-        if email.verification.completed:
-            # maybe bad request instead?
-            raise self.not_authorized(connection.url)
-        return AuthenticationResult(user=user, auth=email)
-
-
 class BasicUsernamePasswordAuthentication(BasicBase):
+    @dataclass
+    class Scope:
+        @dataclass
+        class State:
+            refresh_token = "refresh_token"
+
+        state = "state"
+
     async def authenticate_request(
         self,
         connection: ASGIConnection,
     ) -> AuthenticationResult:
         address, password = await self.get_credentials(connection)
+        agent = connection.headers.get(self.user_agent)
+        host = connection.client.host
         async with Database() as session:
-            user = await session.users.fetch_by_email(address)
-        if not user:
-            raise self.not_authorized(connection.url)
-        if not user.verify(password):
-            raise self.not_authorized(connection.url)
-        email: models.Email | None = next(
-            (email for email in user.emails if email.address == address), None
-        )
-        if not email.verification.completed:
-            raise self.not_authorized(connection.url)
+            async with session.transaction():
+                user = await session.users.fetch_by_email(address)
+                if not user:
+                    raise self.not_authorized(connection.url)
+                if not user.verify(password):
+                    raise self.not_authorized(connection.url)
+                email: models.Email | None = next(
+                    (email for email in user.emails if email.address == address), None
+                )
+                if email is None:
+                    raise self.not_authorized(connection.url)
+                if not email.verification.completed:
+                    raise self.not_authorized(connection.url)
+                user_session: models.Session | None = next(
+                    (
+                        session
+                        for session in user.sessions
+                        if session.agent == agent and session.host == host
+                    ),
+                    None,
+                )
+                if user_session is None:
+                    _, refresh_token = await session.sessions.create(
+                        host, agent, user=user
+                    )
+                else:
+                    refresh_token = user_session.regenerate()
+        connection.scope[self.Scope.state][
+            self.Scope.State.refresh_token
+        ] = refresh_token
         return AuthenticationResult(user=user, auth=email)
+
+
+class BasicUsernamePasswordVerificationAuthentication(BasicBase):
+    @dataclass
+    class Scope:
+        @dataclass
+        class State:
+            refresh_token = "refresh_token"
+
+        state = "state"
+
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        address, password = await self.get_credentials(connection)
+        agent = connection.headers.get(self.user_agent)
+        if agent is None:
+            raise self.not_authorized(connection.url)
+        host = connection.client.host
+        async with Database() as session:
+            async with session.transaction():
+                user = await session.users.fetch_by_email(address)
+                if not user:
+                    raise self.not_authorized(connection.url)
+                if not user.verify(password):
+                    raise self.not_authorized(connection.url)
+                email: models.Email | None = next(
+                    (email for email in user.emails if email.address == address), None
+                )
+                if email.verification.completed:
+                    raise self.not_authorized(connection.url)
+                email.verification.completed = True
+                _, refresh_token = await session.sessions.create(host, agent, user=user)
+        connection.scope[self.Scope.state][
+            self.Scope.State.refresh_token
+        ] = refresh_token
+        return AuthenticationResult(user=user, auth=email)
+
+
+class BasicRefreshTokenAuthentication(BasicBase):
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        user_id, refresh_token = await self.get_credentials(connection)
+        agent = connection.headers.get(self.user_agent)
+        if agent is None:
+            raise self.not_authorized(connection.url)
+        host = connection.client.host
+        async with Database() as session:
+            async with session.transaction():
+                user = await session.users.fetch_by_id(UUID(user_id))
+        user_session: models.Session | None = next(
+            (
+                session
+                for session in user.sessions
+                if session.agent == agent and session.host == host
+            ),
+            None,
+        )
+        if not user_session.verify(user.id, refresh_token):
+            raise self.not_authorized(connection.url)
+        return AuthenticationResult(user=user, auth=user_id)

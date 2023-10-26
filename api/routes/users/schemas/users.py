@@ -1,6 +1,7 @@
 from __future__ import annotations
 from api.schemas import Base
 from database import models
+from database import Session
 from msgspec import Struct
 from msgspec import field
 from shared import hash
@@ -12,11 +13,15 @@ class Creatable(Struct):
     emails: list[str]
     password: password.Creatable
 
-    @staticmethod
-    def create(user: Creatable) -> models.User:
-        return models.User(
-            emails=[models.Email(address=email) for email in user.emails],
-            hash=user.password.create_hash(),
+    async def create(self, session: Session) -> models.User:
+        return await session.users.create(
+            self.password.create_hash(),
+            emails=[
+                await session.emails.create(
+                    address, verification=await session.verifications.create()
+                )
+                for address in self.emails
+            ],
         )
 
 

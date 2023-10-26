@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
-from ..page import Page
+from ...models import User
+from ...models import Email
+from ...models import Session
+from ...page import Page
 from uuid import UUID
-from datetime import datetime
 from . import queries
 
 
@@ -14,8 +15,23 @@ class Users:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, user: User) -> User:
+    async def add(self, user: User) -> User:
         self._session.add(user)
+        return user
+
+    async def create(
+        self,
+        hash: bytes,
+        *,
+        emails: List[Email] | None = None,
+        sessions: List[Session] | None = None,
+    ) -> User:
+        user = User(hash=hash)
+        if emails is not None:
+            user.emails = emails
+        if sessions is not None:
+            user.sessions = sessions
+        await self.add(user)
         return user
 
     async def fetch_by_id(self, id: UUID) -> User | None:
@@ -30,11 +46,6 @@ class Users:
         result = await queries.list(self._session, emails, size, page)
         count = await queries.count(self._session, emails)
         return result, Page(size, page, count)
-
-    async def patch(self, user: User) -> User:
-        user.modified = datetime.now()
-        self._session.add(user)
-        return user
 
     async def delete(self, user: User) -> User:
         await self._session.delete(user)

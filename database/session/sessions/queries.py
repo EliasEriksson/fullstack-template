@@ -18,3 +18,7 @@ async def fetch_by_client(
     query = select(Session).where(Session.host == host).where(Session.agent == agent)
     result = await session.execute(query)
     return result.scalars().one_or_none()
+
+
+async def fetch_by_hash(hash: bytes) -> Session | None:
+    query = select(Session).where

@@ -3,9 +3,10 @@ from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlalchemy import select
-from database.models import User
-from database.models import Email
-from database.models import Verification
+from ...models import User
+from ...models import Email
+from ...models import Verification
+from ...models import Session
 from uuid import UUID
 
 
@@ -13,16 +14,24 @@ async def fetch_by_id(
     session: AsyncSession,
     id: UUID,
 ) -> User | None:
-    query = select(User).where(User.id == id)
+    query = (
+        select(User, Email, Verification, Session)
+        .where(User.id == id)
+        .outerjoin(Email, Email.user_id == User.id)
+        .join(Verification, Verification.email_id == Email.id)
+        .outerjoin(Session, Session.user_id == User.id)
+    )
     result = await session.execute(query)
     return result.scalars().one_or_none()
 
 
 async def fetch_by_email(session: AsyncSession, email: str) -> User | None:
     query = (
-        select(User, Email)
+        select(User, Email, Verification, Session)
         .where(Email.address == email)
         .outerjoin(Email, Email.user_id == User.id)
+        .join(Verification, Verification.email_id == Email.id)
+        .outerjoin(Session, Session.user_id == User.id)
     )
     result = await session.execute(query)
     return result.scalars().one_or_none()
@@ -34,12 +43,13 @@ async def list(
     size: int = 1,
     page: int = 0,
 ) -> Sequence[User]:
-    query = select(User, Email, Verification)
+    query = select(User, Email, Verification, Session)
     if emails is not None:
         query = query.where(Email.address.in_(emails))
     query = (
         query.outerjoin(Email, Email.user_id == User.id)
         .join(Verification, Verification.email_id == Email.id)
+        .outerjoin(Session, Session.user_id == User.id)
         .offset(size * page)
         .limit(size)
     )

@@ -31,11 +31,11 @@ class Session(Base):
         LargeBinary(),
         nullable=False,
     )
-    agent: Mapped[String] = mapped_column(
+    host: Mapped[String] = mapped_column(
         String(),
         nullable=False,
     )
-    host: Mapped[String] = mapped_column(
+    agent: Mapped[String] = mapped_column(
         String(),
         nullable=False,
     )
@@ -54,8 +54,14 @@ class Session(Base):
         lazy=Lazy.default(),
     )
 
-    def verify(self, user: str, token: str) -> bool:
+    def verify(self, user: UUID, token: str) -> bool:
         return self.user_id == user and checkpw(token.encode(), self.hash)
+
+    def regenerate(self) -> str:
+        refresh_token = self.generate_token()
+        self.hash = cast(Mapped[bytes], self.create_hash(refresh_token))
+        self.expires = cast(Mapped[DateTime], datetime.now() + timedelta(days=30))
+        return refresh_token
 
     @staticmethod
     def generate_token() -> str:

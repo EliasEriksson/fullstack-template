@@ -1,6 +1,6 @@
 from database import Database
 from database import models
-from ..test_database import empty_database
+from database.test_database import empty_database
 from shared import hash
 import pytest
 

@@ -5,6 +5,7 @@ from sqlalchemy import Result
 from .users import Users
 from .emails import Emails
 from .sessions import Sessions
+from .verifications import Verifications
 
 
 class Session:
@@ -12,12 +13,14 @@ class Session:
     users: Users
     emails: Emails
     sessions: Sessions
+    verifications: Verifications
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self.users = Users(self._session)
         self.emails = Emails(self._session)
         self.sessions = Sessions(self._session)
+        self.verifications = Verifications(self._session)
 
     def transaction(self) -> AsyncSessionTransaction:
         return self._session.begin()

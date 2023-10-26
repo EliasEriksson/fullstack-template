@@ -39,7 +39,7 @@ class Controller(LitestarController):
     ) -> Response[Resource[User]]:
         async with Database() as session:
             async with session.transaction():
-                created = await session.users.create(Creatable.create(data))
+                created = await data.create(session)
         result = User.from_model(created)
         return Response(
             Resource(result),

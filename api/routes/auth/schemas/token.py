@@ -6,6 +6,7 @@ from msgspec import field
 from datetime import datetime
 from datetime import timedelta
 from database import models
+from database.session import Session
 from api.configuration import ApiConfiguration
 from jose import jwt
 from jose.exceptions import JWSError
@@ -36,14 +37,15 @@ class Creatable(Struct):
     emails: list[str]
     password: password.Creatable
 
-    @staticmethod
-    def create(user: Creatable) -> models.User:
-        return models.User(
+    async def create(self, session: Session) -> models.User:
+        return await session.users.create(
+            self.password.create_hash(),
             emails=[
-                models.Email(address=email, verification=models.Verification())
-                for email in user.emails
+                await session.emails.create(
+                    address, verification=await session.verifications.create()
+                )
+                for address in self.emails
             ],
-            hash=user.password.create_hash(),
         )
 
 
@@ -113,7 +115,9 @@ class Token(Struct):
             raise TokenDecodeException()
 
     @classmethod
-    def encode_model(cls, user: models.User, audience: str | URL, refresh_token: str | None = None) -> str:
+    def encode_model(
+        cls, user: models.User, audience: str | URL, refresh_token: str | None = None
+    ) -> str:
         now = cls._issued()
         return cls.encode(
             cls(

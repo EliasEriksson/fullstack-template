@@ -2,10 +2,11 @@ from __future__ import annotations
 from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from datetime import datetime
-from ..models import Email
+from ...models import Email
+from ...models import User
+from ...models import Verification
 from . import queries
-from ..page import Page
+from database.page import Page
 
 
 class Emails:
@@ -14,11 +15,26 @@ class Emails:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, email: Email) -> Email:
+    async def add(self, email: Email) -> Email:
         self._session.add(email)
         return email
 
-    async def fetch(self, id: UUID) -> Email | None:
+    async def create(
+        self,
+        address: str,
+        *,
+        user: User | None = None,
+        verification: Verification | None = None,
+    ) -> Email:
+        email = Email(address=address)
+        if user is not None:
+            email.user = user
+        if verification is not None:
+            email.verification = verification
+        await self.add(email)
+        return email
+
+    async def fetch_by_id(self, id: UUID) -> Email | None:
         return await queries.fetch(self._session, id)
 
     async def list(
@@ -27,11 +43,6 @@ class Emails:
         result = await queries.list(self._session, emails, size, page)
         count = await queries.count(self._session, emails)
         return result, Page(size, page, count)
-
-    async def patch(self, email: Email) -> Email:
-        email.modified = datetime.now()
-        self._session.add(email)
-        return email
 
     async def delete(self, email: Email) -> Email:
         await self._session.delete(email)
