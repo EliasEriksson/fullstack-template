@@ -1,10 +1,12 @@
 from __future__ import annotations
+
+import os
 from typing import *
 from shared.configuration import Configuration
 from shared.configuration import ConfigurationMissingVariable
 from shared.iterable import Iterable
 from functools import cached_property
-import re
+from pathlib import Path
 
 
 class Variables(Iterable):
@@ -12,17 +14,13 @@ class Variables(Iterable):
     jwt_public_key = "JWT_PUBLIC_KEY"
     password_pepper = "PASSWORD_PEPPER"
 
+    def __getitem__(self, item) -> Any:
+        return self.__dict__[item]
+
 
 class ApiConfiguration(Configuration):
     _variables = Variables()
     _secure: bool
-    _private_key_pattern = re.compile(
-        r"^-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----$"
-    )
-    _public_key_pattern = re.compile(
-        r"^-----BEGIN PUBLIC KEY-----.*?-----END PUBLIC KEY-----$"
-    )
-    _whitespace_pattern = re.compile(r"\s")
 
     def __init__(
         self,
@@ -31,19 +29,18 @@ class ApiConfiguration(Configuration):
     ) -> None:
         super().__init__(environment)
         self._secure = secure
-        self._write()
+        if not environment:
+            return
+        for key, value in environment.items():
+            if value:
+                os.environ[key] = f"{value}"
 
     @cached_property
     def jwt_private_key(self) -> str:
         try:
             result = self._string(self._variables.jwt_private_key)
-            if self._private_key_pattern.match(result):
-                return result
-            return (
-                f"-----BEGIN PRIVATE KEY-----\n"
-                + self._whitespace_pattern.sub("\n", result)
-                + f"\n-----END PRIVATE KEY-----"
-            )
+            with Path(result) as file:
+                return file.read_text()
         except ConfigurationMissingVariable as error:
             if self._secure:
                 raise error
@@ -107,13 +104,8 @@ class ApiConfiguration(Configuration):
     def jwt_public_key(self) -> str:
         try:
             result = self._string(self._variables.jwt_public_key)
-            if self._public_key_pattern.match(result):
-                return result
-            return (
-                f"-----BEGIN PUBLIC KEY-----\n"
-                + self._whitespace_pattern.sub("\n", result)
-                + f"\n-----END PUBLIC KEY-----"
-            )
+            with Path(result) as file:
+                return file.read_text()
         except ConfigurationMissingVariable as error:
             if self._secure:
                 raise error
@@ -142,23 +134,3 @@ class ApiConfiguration(Configuration):
             if self._secure:
                 raise error
             return ""
-
-    def _write(self) -> None:
-        self._set(
-            self._variables.jwt_private_key,
-            self.jwt_private_key.removeprefix("-----BEGIN PRIVATE KEY-----")
-            .lstrip()
-            .removesuffix("-----END PRIVATE KEY-----")
-            .rstrip(),
-        )
-        self._set(
-            self._variables.jwt_public_key,
-            self.jwt_public_key.removeprefix("-----BEGIN PUBLIC KEY-----")
-            .lstrip()
-            .removesuffix("-----END PUBLIC KEY-----")
-            .rstrip(),
-        )
-        self._set(
-            self._variables.password_pepper,
-            self.password_pepper,
-        )
