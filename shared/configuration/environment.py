@@ -41,6 +41,7 @@ class Environment:
 
     def _set_environment(self, environment: TEnvironment, defaults=False) -> None:
         self._environment = self._read_environment(environment)
+        print("THE ENVIRONMENT", self._environment)
         for variable in self._variables:
             value = self._environment.get(variable) or (
                 self._variables[variable] if defaults else None
