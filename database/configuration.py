@@ -86,7 +86,7 @@ class DatabaseConfiguration(BaseConfiguration):
         except EnvironmentMissingVariableError as error:
             if self.mode == "prod":
                 raise error
-            return "lite-star"
+            return "lite-star-test"
 
     @cached_property
     def host(self) -> str:
@@ -98,4 +98,6 @@ class DatabaseConfiguration(BaseConfiguration):
 
     @cached_property
     def url(self) -> str:
-        return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+        result = f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+        print("url:", result)
+        return result
