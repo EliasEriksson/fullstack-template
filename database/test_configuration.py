@@ -1,13 +1,13 @@
 from shared.configuration import Configuration
 from shared.configuration import ConfigurationValueError
-from shared.configuration import ConfigurationMissingVariable
+from shared.configuration.environment import EnvironmentMissingVariableError
 
 
 async def test_missing_variable():
     environment = {}
     try:
         Configuration(environment)
-    except ConfigurationMissingVariable:
+    except EnvironmentMissingVariableError:
         pass
     environment = {
         "POSTGRES_USERNAME": "lite-star",

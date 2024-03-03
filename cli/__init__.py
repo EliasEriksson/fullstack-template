@@ -5,6 +5,7 @@ import sys
 from . import api
 from . import ui
 from database.configuration import DatabaseConfiguration
+from shared.configuration.environment import TEnvironment
 from api.configuration import ApiConfiguration
 from . import database
 import subprocess
@@ -26,8 +27,8 @@ cli.add_command(database.cli)
     type=str,
     help="Postgres database name.",
 )
-def test(**environment: dict[str, Any]):
-    DatabaseConfiguration(environment)
-    ApiConfiguration(environment, secure=False)
+def test(**environment: TEnvironment):
+    DatabaseConfiguration(cli=environment)
+    ApiConfiguration(cli=environment)
     return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
     sys.exit(return_code)
