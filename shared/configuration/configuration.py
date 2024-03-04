@@ -4,6 +4,7 @@ from functools import cached_property
 from .environment import EnvironmentError
 from .environment import Environment
 from .environment import TEnvironment
+from .environment import TVariables
 from ..singleton import Singleton
 from ..iterable import Iterable
 
@@ -25,13 +26,17 @@ class Configuration(Singleton):
 
     def __init__(
         self,
-        variables: TEnvironment | None = None,
+        variables: TVariables | None = None,
         *,
         cli: TEnvironment | None = None,
         file: TEnvironment | None = None,
+        defaults: TEnvironment | None = None,
     ) -> None:
         self.environment = Environment(
-            {Variables.mode: "dev", **(variables or {})}, cli=cli, file=file
+            variables or Variables,
+            cli=cli,
+            file=file,
+            defaults={Variables.mode: "dev", **(defaults or {})},
         )
 
     @cached_property

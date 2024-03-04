@@ -1,9 +1,9 @@
 from __future__ import annotations
+from typing import *
 import os
 
-TValue = str | int | float
+TValue = str | int | float | None
 TEnvironment = dict[str, TValue]
-TVariables = TEnvironment
 
 
 class EnvironmentError(Exception):
@@ -24,28 +24,37 @@ class EnvironmentValueTypeError(EnvironmentError):
         )
 
 
+class TVariables(Protocol):
+    def __iter__(self) -> Iterable[str]:
+        ...
+
+    def __getitem__(self, item: str) -> TValue:
+        ...
+
+
 class Environment:
     _variables: TVariables
     _environment: TEnvironment
 
     def __init__(
         self,
-        variables: TEnvironment,
+        variables: TVariables,
+        *,
+        defaults: TEnvironment | None = None,
         cli: TEnvironment | None = None,
         file: TEnvironment | None = None,
     ) -> None:
         self._variables = variables
         self._set_environment(
-            {**os.environ.copy(), **(file or {}), **(cli or {})}, defaults=True
+            {**(defaults or {}), **os.environ.copy(), **(file or {}), **(cli or {})},
         )
 
-    def _set_environment(self, environment: TEnvironment, defaults=False) -> None:
+    def __len__(self) -> int:
+        return len(self._environment)
+
+    def _set_environment(self, environment: TEnvironment) -> None:
         self._environment = self._read_environment(environment)
-        print("THE ENVIRONMENT", self._environment)
-        for variable in self._variables:
-            value = self._environment.get(variable) or (
-                self._variables[variable] if defaults else None
-            )
+        for variable, value in self._environment.items():
             if value:
                 os.environ[variable] = str(value)
 
@@ -55,8 +64,9 @@ class Environment:
     def _read_environment(self, environment: TEnvironment) -> TEnvironment:
         return {
             variable: value
-            for variable in self._variables
-            if (value := environment.get(variable))
+            for name in self._variables
+            if (value := environment.get((variable := self._variables[name])))
+            is not None
         }
 
     def get_string(self, variable: str) -> str:

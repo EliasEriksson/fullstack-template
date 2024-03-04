@@ -20,16 +20,17 @@ class ApiConfiguration(BaseConfiguration):
         *,
         cli: TEnvironment | None = None,
         file: TEnvironment | None = None,
+        defaults: TEnvironment | None = None,
     ) -> None:
         super().__init__(
-            {
-                Variables.port: 8080,
-                Variables.jwt_private_key: None,
-                Variables.jwt_public_key: None,
-                Variables.password_pepper: None,
-            },
+            Variables,
             cli=cli,
             file=file,
+            defaults={
+                Variables.password_pepper: "",
+                Variables.port: 8080,
+                **(defaults or {}),
+            },
         )
 
     @cached_property
@@ -38,12 +39,7 @@ class ApiConfiguration(BaseConfiguration):
 
     @cached_property
     def password_pepper(self) -> str:
-        try:
-            return self.environment.get_string(Variables.password_pepper)
-        except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
-                raise error
-            return ""
+        return self.environment.get_string(Variables.password_pepper)
 
     @cached_property
     def jwt_private_key(self) -> str:

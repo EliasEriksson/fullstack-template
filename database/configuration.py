@@ -3,7 +3,6 @@ from pathlib import Path
 from functools import cached_property
 from alembic.config import Config as AlembicConfiguration
 from shared.configuration import ConfigurationError
-from shared.configuration.environment import EnvironmentMissingVariableError
 from shared.configuration.environment import TEnvironment
 from shared.configuration import Configuration as BaseConfiguration
 from shared.configuration import Variables as BaseVariables
@@ -35,19 +34,22 @@ class DatabaseConfiguration(BaseConfiguration):
         *,
         cli: TEnvironment | None = None,
         file: TEnvironment | None = None,
+        defaults: TEnvironment | None = None,
         alembic: AlembicConfiguration | None = None,
     ) -> None:
+        print("DatabaseConfiguration:", defaults)
         super().__init__(
-            {
-                Variables.mode: "dev",
-                Variables.username: None,
-                Variables.password: None,
-                Variables.database: None,
-                Variables.host: "localhost",
-                Variables.port: 5432,
-            },
+            Variables,
             cli=cli,
             file=file,
+            defaults={
+                Variables.username: "lite-star",
+                Variables.password: "lite-star",
+                Variables.database: "lite-star",
+                Variables.host: "localhost",
+                Variables.port: 5432,
+                **(defaults or {}),
+            },
         )
         self.alembic = (
             alembic if alembic is not None else AlembicConfiguration("./alembic.ini")
@@ -63,30 +65,15 @@ class DatabaseConfiguration(BaseConfiguration):
 
     @cached_property
     def username(self) -> str:
-        try:
-            return self.environment.get_string(Variables.username)
-        except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
-                raise error
-            return "lite-star"
+        return self.environment.get_string(Variables.username)
 
     @cached_property
     def password(self) -> str:
-        try:
-            return self.environment.get_string(Variables.password)
-        except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
-                raise error
-            return "lite-star"
+        return self.environment.get_string(Variables.password)
 
     @cached_property
     def database(self) -> str:
-        try:
-            return self.environment.get_string(Variables.database)
-        except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
-                raise error
-            return "lite-star-test"
+        return self.environment.get_string(Variables.database)
 
     @cached_property
     def host(self) -> str:
