@@ -32,6 +32,9 @@ class TVariables(Protocol):
         ...
 
 
+initial = os.environ.copy()
+
+
 class Environment:
     _variables: TVariables
     _environment: TEnvironment
@@ -45,6 +48,7 @@ class Environment:
         file: TEnvironment | None = None,
     ) -> None:
         self._variables = variables
+        self._reset()
         self._set_environment(
             {**(defaults or {}), **os.environ.copy(), **(file or {}), **(cli or {})},
         )
@@ -101,3 +105,8 @@ class Environment:
 
     def set_float(self, variable: str, value: float) -> None:
         self._set_environment({variable: value})
+
+    @staticmethod
+    def _reset() -> None:
+        os.environ.clear()
+        os.environ.update(initial)

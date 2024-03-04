@@ -17,11 +17,6 @@ public_pattern = re.compile(
 )
 
 
-def reset_environ():
-    os.environ.clear()
-    os.environ.update(original)
-
-
 def test_defaults():
     configuration = ApiConfiguration()
     assert configuration.mode == "dev"
@@ -30,7 +25,6 @@ def test_defaults():
     assert configuration.password_pepper == ""
     assert configuration.port == 8080
     assert len(configuration.environment) == 3
-    reset_environ()
 
 
 async def test_modified_defaults():
@@ -48,7 +42,6 @@ async def test_modified_defaults():
     assert configuration.jwt_public_key == contents
     assert configuration.password_pepper == "pepper"
     assert len(configuration.environment) == 5
-    reset_environ()
 
 
 async def test_overwriting_defaults():
@@ -70,4 +63,3 @@ async def test_overwriting_defaults():
     assert configuration.password_pepper == ""
     assert private_pattern.search(configuration.jwt_private_key)
     assert public_pattern.search(configuration.jwt_public_key)
-    reset_environ()

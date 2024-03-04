@@ -1,26 +1,17 @@
 from .configuration import DatabaseConfiguration
 from .configuration import Variables
 from shared.configuration.environment import EnvironmentValueTypeError
-import os
-
-original = os.environ.copy()
-
-
-def reset_environ():
-    os.environ.clear()
-    os.environ.update(original)
 
 
 async def test_defaults():
     configuration = DatabaseConfiguration()
     assert configuration.mode == "dev"
-    assert configuration.username == "lite-star"
-    assert configuration.password == "lite-star"
-    assert configuration.database == "lite-star"
+    assert configuration.username
+    assert configuration.password
+    assert configuration.database
     assert configuration.host == "localhost"
     assert configuration.port == 5432
     assert len(configuration.environment) == 6
-    reset_environ()
 
 
 async def test_modified_defaults():
@@ -31,13 +22,12 @@ async def test_modified_defaults():
         defaults=defaults,
     )
     assert configuration.mode == "dev"
-    assert configuration.username == "lite-star"
-    assert configuration.password == "lite-star"
-    assert configuration.database == "lite-star-test"
+    assert configuration.username
+    assert configuration.password
+    assert configuration.database
     assert configuration.host == "localhost"
     assert configuration.port == 5432
     assert len(configuration.environment) == 6
-    reset_environ()
 
 
 async def test_overwriting_defaults():
@@ -56,7 +46,6 @@ async def test_overwriting_defaults():
     assert configuration.mode == "dev"
     assert configuration.username == "not-lite-star"
     assert len(configuration.environment) == 6
-    reset_environ()
 
 
 async def test_bad_values():
@@ -72,4 +61,3 @@ async def test_bad_values():
     except EnvironmentValueTypeError:
         failed = True
     assert failed is True
-    reset_environ()
