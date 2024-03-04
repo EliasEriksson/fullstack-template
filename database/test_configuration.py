@@ -1,25 +1,63 @@
-from shared.configuration import Configuration
-from shared.configuration import ConfigurationValueError
-from shared.configuration import ConfigurationMissingVariable
+from .configuration import DatabaseConfiguration
+from .configuration import Variables
+from shared.configuration.environment import EnvironmentValueTypeError
 
 
-async def test_missing_variable():
-    environment = {}
-    try:
-        Configuration(environment)
-    except ConfigurationMissingVariable:
-        pass
-    environment = {
-        "POSTGRES_USERNAME": "lite-star",
-        "POSTGRES_PASSWORD": "lite-star",
-        "POSTGRES_DATABASE": "lite-star-test",
-        "POSTGRES_HOST": "localhost",
-        "POSTGRES_PORT": "garbage",
+async def test_defaults():
+    configuration = DatabaseConfiguration()
+    assert configuration.mode == "dev"
+    assert configuration.username
+    assert configuration.password
+    assert configuration.database
+    assert configuration.host == "localhost"
+    assert configuration.port == 5432
+    assert len(configuration.environment) == 6
+
+
+async def test_modified_defaults():
+    defaults = {
+        Variables.database: "lite-star-test",
     }
+    configuration = DatabaseConfiguration(
+        defaults=defaults,
+    )
+    assert configuration.mode == "dev"
+    assert configuration.username
+    assert configuration.password
+    assert configuration.database
+    assert configuration.host == "localhost"
+    assert configuration.port == 5432
+    assert len(configuration.environment) == 6
+
+
+async def test_overwriting_defaults():
+    defaults = {
+        Variables.mode: "prod",
+        Variables.username: "garbage",
+    }
+    cli = {
+        Variables.mode: "dev",
+        Variables.username: "not-lite-star",
+    }
+    configuration = DatabaseConfiguration(
+        cli=cli,
+        defaults=defaults,
+    )
+    assert configuration.mode == "dev"
+    assert configuration.username == "not-lite-star"
+    assert len(configuration.environment) == 6
+
+
+async def test_bad_values():
+    cli = {
+        Variables.port: "1234q",
+    }
+    configuration = DatabaseConfiguration(
+        cli=cli,
+    )
     try:
-        Configuration(environment)
-    except ConfigurationValueError:
-        pass
-    environment["POSTGRES_PORT"] = "5432"
-    assert Configuration(environment) is Configuration()
-    assert Configuration(environment) is not Configuration(environment)
+        assert configuration.port
+        failed = True
+    except EnvironmentValueTypeError:
+        failed = True
+    assert failed is True

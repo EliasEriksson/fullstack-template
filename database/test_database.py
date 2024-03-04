@@ -1,13 +1,18 @@
 import pytest
 from database import models
 from sqlalchemy import select
+from database.configuration import DatabaseConfiguration
+from database.configuration import Variables
 from database import Database
 from shared import hash
 
 
 @pytest.fixture
 async def database():
-    database = Database()
+    configuration = DatabaseConfiguration(
+        defaults={Variables.database: "lite-star-test"}
+    )
+    database = Database(configuration)
     await database.create()
     yield database
     await database.delete()

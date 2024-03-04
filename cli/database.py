@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import *
 import click
+from shared.configuration.environment import TEnvironment
 from database import Database
 from database import DatabaseConfiguration
+from database import Variables
 import asyncio
 from functools import reduce
 from alembic import command
@@ -15,31 +16,31 @@ def database_configuration(command):
     options = (
         click.option(
             "--postgres-username",
-            "POSTGRES_USERNAME",
+            Variables.username,
             type=str,
             help="Postgres username.",
         ),
         click.option(
             "--postgres-password",
-            "POSTGRES_PASSWORD",
+            Variables.password,
             type=str,
             help="Postgres password.",
         ),
         click.option(
             "--postgres-database",
-            "POSTGRES_DATABASE",
+            Variables.database,
             type=str,
             help="Postgres database name.",
         ),
         click.option(
             "--postgres-host",
-            "POSTGRES_HOST",
+            Variables.host,
             type=str,
             help="Hostname for Postgres database location.",
         ),
         click.option(
             "--postgres-port",
-            "POSTGRES_PORT",
+            Variables.port,
             type=int,
             help="Port used by the Postgres database server.",
         ),
@@ -49,16 +50,16 @@ def database_configuration(command):
 
 @cli.command()
 @database_configuration
-def create(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def create(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     database = Database(configuration)
     asyncio.run(database.create())
 
 
 @cli.command()
 @database_configuration
-def delete(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def delete(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     message = (
         f"This operation will delete all tables related to this "
         f"application from the database '{configuration.database}'.\n"
@@ -77,8 +78,8 @@ def delete(**environment: dict[str, Any]) -> None:
 @cli.command()
 @click.option("--message", "-m", type=str, help="Revision message", default=None)
 @database_configuration
-def revision(message: str | None, **environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def revision(message: str | None, **environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.revision(
         configuration.alembic,
         autogenerate=True,
@@ -88,8 +89,8 @@ def revision(message: str | None, **environment: dict[str, Any]) -> None:
 
 @cli.command()
 @database_configuration
-def migrate(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def migrate(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     for content in configuration.migrations.iterdir():
         if content.is_file():
             break
@@ -105,65 +106,65 @@ def migrate(**environment: dict[str, Any]) -> None:
 @cli.command()
 @click.argument("revision", type=str)
 @database_configuration
-def upgrade(revision: str, **environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def upgrade(revision: str, **environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.upgrade(configuration.alembic, revision)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
 @database_configuration
-def downgrade(revision: str, **environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def downgrade(revision: str, **environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.downgrade(configuration.alembic, revision)
 
 
 @cli.command()
 @database_configuration
-def heads(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def heads(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.heads(configuration.alembic)
 
 
 @cli.command()
 @database_configuration
-def check(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def check(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.check(configuration.alembic)
 
 
 @cli.command()
 @database_configuration
-def branches(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def branches(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.branches(configuration.alembic)
 
 
 @cli.command()
 @database_configuration
-def current(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def current(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.current(configuration.alembic)
 
 
 @cli.command()
 @database_configuration
-def ensure_version(**environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def ensure_version(**environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.ensure_version(configuration.alembic)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
 @database_configuration
-def show(revision: str, **environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def show(revision: str, **environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.show(configuration.alembic, revision)
 
 
 @cli.command()
 @click.argument("revision", type=str, required=True)
 @database_configuration
-def stamp(revision: str, **environment: dict[str, Any]) -> None:
-    configuration = DatabaseConfiguration(environment)
+def stamp(revision: str, **environment: TEnvironment) -> None:
+    configuration = DatabaseConfiguration(cli=environment)
     command.stamp(configuration.alembic, revision)

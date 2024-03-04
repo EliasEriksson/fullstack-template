@@ -1,10 +1,11 @@
-from typing import Any
+from __future__ import annotations
 from pathlib import Path
+from functools import cached_property
 from alembic.config import Config as AlembicConfiguration
 from shared.configuration import ConfigurationError
-from shared.configuration import ConfigurationMissingVariable
-from shared.configuration import Configuration
-from shared.iterable import Iterable
+from shared.configuration.environment import TEnvironment
+from shared.configuration import Configuration as BaseConfiguration
+from shared.configuration import Variables as BaseVariables
 
 
 class AlembicMigrationsNotFound(ConfigurationError):
@@ -16,7 +17,7 @@ class AlembicMigrationsNotFound(ConfigurationError):
         super().__init__(message)
 
 
-class Variables(Iterable):
+class Variables(BaseVariables):
     username = "POSTGRES_USERNAME"
     password = "POSTGRES_PASSWORD"
     database = "POSTGRES_DATABASE"
@@ -24,18 +25,32 @@ class Variables(Iterable):
     port = "POSTGRES_PORT"
 
 
-class DatabaseConfiguration(Configuration):
+class DatabaseConfiguration(BaseConfiguration):
     migrations: Path
     alembic: AlembicConfiguration
 
-    variables = Variables()
-
     def __init__(
         self,
-        environment: dict[str, Any] | None = None,
+        *,
+        cli: TEnvironment | None = None,
+        file: TEnvironment | None = None,
+        defaults: TEnvironment | None = None,
         alembic: AlembicConfiguration | None = None,
     ) -> None:
-        super().__init__(environment)
+        print("DatabaseConfiguration:", defaults)
+        super().__init__(
+            Variables,
+            cli=cli,
+            file=file,
+            defaults={
+                Variables.username: "lite-star",
+                Variables.password: "lite-star",
+                Variables.database: "lite-star",
+                Variables.host: "localhost",
+                Variables.port: 5432,
+                **(defaults or {}),
+            },
+        )
         self.alembic = (
             alembic if alembic is not None else AlembicConfiguration("./alembic.ini")
         )
@@ -47,50 +62,29 @@ class DatabaseConfiguration(Configuration):
             self.migrations.mkdir(exist_ok=True)
         except FileNotFoundError:
             raise AlembicMigrationsNotFound(self.migrations)
-        self._write()
 
-    @property
+    @cached_property
     def username(self) -> str:
-        try:
-            return self._string(self.variables.username)
-        except ConfigurationMissingVariable:
-            return "lite-star"
+        return self.environment.get_string(Variables.username)
 
-    @property
+    @cached_property
     def password(self) -> str:
-        try:
-            return self._string(self.variables.password)
-        except ConfigurationMissingVariable:
-            return "lite-star"
+        return self.environment.get_string(Variables.password)
 
-    @property
+    @cached_property
     def database(self) -> str:
-        try:
-            return self._string(self.variables.database)
-        except ConfigurationMissingVariable:
-            return "lite-star"
+        return self.environment.get_string(Variables.database)
 
-    @property
+    @cached_property
     def host(self) -> str:
-        try:
-            return self._string(self.variables.host)
-        except ConfigurationMissingVariable:
-            return "localhost"
+        return self.environment.get_string(Variables.host)
 
-    @property
+    @cached_property
     def port(self) -> int:
-        try:
-            return self._integer(self.variables.port)
-        except ConfigurationMissingVariable:
-            return 5432
+        return self.environment.get_int(Variables.port)
 
-    @property
+    @cached_property
     def url(self) -> str:
-        return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
-
-    def _write(self) -> None:
-        self._set(self.variables.username, self.username)
-        self._set(self.variables.password, self.password)
-        self._set(self.variables.database, self.database)
-        self._set(self.variables.host, self.host)
-        self._set(self.variables.port, self.port)
+        result = f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+        print("url:", result)
+        return result
