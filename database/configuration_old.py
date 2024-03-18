@@ -21,6 +21,7 @@ class Variables(BaseVariables):
     username = "POSTGRES_USERNAME"
     password = "POSTGRES_PASSWORD"
     database = "POSTGRES_DATABASE"
+    test_database = "POSTGRES_TEST_DATABASE"
     host = "POSTGRES_HOST"
     port = "POSTGRES_PORT"
 
@@ -37,7 +38,6 @@ class DatabaseConfiguration(BaseConfiguration):
         defaults: TEnvironment | None = None,
         alembic: AlembicConfiguration | None = None,
     ) -> None:
-        print("DatabaseConfiguration:", defaults)
         super().__init__(
             Variables,
             cli=cli,
@@ -46,6 +46,7 @@ class DatabaseConfiguration(BaseConfiguration):
                 Variables.username: "lite-star",
                 Variables.password: "lite-star",
                 Variables.database: "lite-star",
+                Variables.test_database: "lite-star-test",
                 Variables.host: "localhost",
                 Variables.port: 5432,
                 **(defaults or {}),
@@ -76,6 +77,10 @@ class DatabaseConfiguration(BaseConfiguration):
         return self.environment.get_string(Variables.database)
 
     @cached_property
+    def test_database(self) -> str:
+        return self.environment.get_string(Variables.test_database)
+
+    @cached_property
     def host(self) -> str:
         return self.environment.get_string(Variables.host)
 
@@ -85,6 +90,6 @@ class DatabaseConfiguration(BaseConfiguration):
 
     @cached_property
     def url(self) -> str:
-        result = f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
-        print("url:", result)
-        return result
+        database = self.test_database if self.mode == "test" else self.database
+        print(f"using database {database}")
+        return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{database}"

@@ -1,13 +1,22 @@
 from __future__ import annotations
+
+import os
 from typing import *
 import click
 import sys
 from . import api
 from . import ui
-from shared.configuration.environment import TEnvironment
-from database.configuration import DatabaseConfiguration
-from database.configuration import Variables
-from api.configuration import ApiConfiguration
+from configuration import Configuration
+from configuration.environment.types import TEnvironment
+from configuration.variables import Variables
+
+# from shared.configuration.environment import TEnvironment
+# from shared.configuration import Configuration
+# from shared.configuration.configuration import Variables
+
+# from database.configuration_old import DatabaseConfiguration
+# from database.configuration_old import Variables
+# from api.configuration import ApiConfiguration
 from . import database
 import subprocess
 
@@ -21,14 +30,15 @@ cli.add_command(database.cli)
 @database.database_configuration
 @api.api_configuration
 def test(**environment: TEnvironment):
-    DatabaseConfiguration(
-        cli=environment,
-        defaults={
-            Variables.database: "lite-star-test",
+    Configuration(
+        cli={
+            Variables.mode: "test",
+            **{
+                variable: value
+                for variable, value in environment.items()
+                if value is not None
+            },
         },
-    )
-    ApiConfiguration(
-        cli=environment,
     )
     return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
     sys.exit(return_code)

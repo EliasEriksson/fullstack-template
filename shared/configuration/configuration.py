@@ -40,8 +40,8 @@ class Configuration(Singleton):
         )
 
     @cached_property
-    def mode(self) -> Literal["prod", "dev"]:
+    def mode(self) -> Literal["prod", "dev", "test"]:
         result = self.environment.get_string(Variables.mode)
-        if result not in ["dev", "prod"]:
+        if result not in ["dev", "prod", "test"]:
             raise ConfigurationValueError()
-        return cast(Literal["dev", "prod"], result)
+        return cast(Literal["dev", "prod", "test"], result)

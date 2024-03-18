@@ -3,7 +3,7 @@ from functools import reduce
 import uvicorn
 import click
 from shared.configuration.environment import TEnvironment
-from database.configuration import DatabaseConfiguration
+from database.configuration_old import DatabaseConfiguration
 from api.configuration import ApiConfiguration
 from api.configuration import Variables as ApiVariables
 from .database import database_configuration

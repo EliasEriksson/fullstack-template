@@ -5,6 +5,8 @@ import os
 TValue = str | int | float | None
 TEnvironment = dict[str, TValue]
 
+# /home/eliaseriksson/dev/eliaseriksson/fullstack-template/shared/configuration/environment.py
+
 
 class EnvironmentError(Exception):
     pass
@@ -32,12 +34,10 @@ class TVariables(Protocol):
         ...
 
 
-initial = os.environ.copy()
-
-
 class Environment:
     _variables: TVariables
     _environment: TEnvironment
+    _initial: TEnvironment | None = None
 
     def __init__(
         self,
@@ -61,6 +61,8 @@ class Environment:
         for variable, value in self._environment.items():
             if value:
                 os.environ[variable] = str(value)
+        if not self._initial:
+            self._initial = os.environ.copy()
 
     def _get_environment(self) -> TEnvironment:
         return self._environment
@@ -106,7 +108,7 @@ class Environment:
     def set_float(self, variable: str, value: float) -> None:
         self._set_environment({variable: value})
 
-    @staticmethod
-    def _reset() -> None:
-        os.environ.clear()
-        os.environ.update(initial)
+    def _reset(self) -> None:
+        if self._initial:
+            os.environ.clear()
+            os.environ.update(self._initial)
