@@ -1,11 +1,8 @@
 from configuration import Configuration
-from .variables import Variables
+from configuration.api.variables import Variables
 from pathlib import Path
-import os
 import re
-
-original = os.environ.copy()
-
+from ..fixtures import environment
 
 private_pattern = re.compile(
     r"^-----BEGIN PRIVATE KEY-----\n.*\n-----END PRIVATE KEY-----(\n|$)",
@@ -17,16 +14,7 @@ public_pattern = re.compile(
 )
 
 
-def test_defaults():
-    configuration = Configuration()
-    assert configuration.mode == "test"
-    assert private_pattern.search(configuration.api.jwt_private_key)
-    assert public_pattern.search(configuration.api.jwt_public_key)
-    assert configuration.api.password_pepper == ""
-    assert configuration.api.port == 8080
-
-
-async def test_modified_defaults():
+async def test_modified_defaults(environment: None) -> None:
     cli = {
         Variables.password_pepper: "pepper",
         Variables.jwt_private_key: __file__,
@@ -42,7 +30,7 @@ async def test_modified_defaults():
     assert configuration.api.password_pepper == "pepper"
 
 
-async def test_overwriting_defaults():
+async def test_overwriting_defaults(environment: None) -> None:
     cli = {
         Variables.password_pepper: "",
         Variables.jwt_private_key: None,
@@ -55,3 +43,12 @@ async def test_overwriting_defaults():
     assert configuration.api.password_pepper == ""
     assert private_pattern.search(configuration.api.jwt_private_key)
     assert public_pattern.search(configuration.api.jwt_public_key)
+
+
+def test_defaults(environment: None) -> None:
+    configuration = Configuration()
+    assert configuration.mode == "test"
+    assert private_pattern.search(configuration.api.jwt_private_key)
+    assert public_pattern.search(configuration.api.jwt_public_key)
+    assert configuration.api.password_pepper == ""
+    assert configuration.api.port == 8080

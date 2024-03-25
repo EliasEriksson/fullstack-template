@@ -1,7 +1,4 @@
 from __future__ import annotations
-
-import os
-from typing import *
 import click
 import sys
 from . import api
@@ -9,14 +6,6 @@ from . import ui
 from configuration import Configuration
 from configuration.environment.types import TEnvironment
 from configuration.variables import Variables
-
-# from shared.configuration.environment import TEnvironment
-# from shared.configuration import Configuration
-# from shared.configuration.configuration import Variables
-
-# from database.configuration_old import DatabaseConfiguration
-# from database.configuration_old import Variables
-# from api.configuration import ApiConfiguration
 from . import database
 import subprocess
 
@@ -40,5 +29,5 @@ def test(**environment: TEnvironment):
             },
         },
     )
-    return_code = subprocess.call(["pytest", "--asyncio-mode", "auto"])
+    return_code = subprocess.call(["pytest", "--asyncio-mode", "auto", "tests"])
     sys.exit(return_code)

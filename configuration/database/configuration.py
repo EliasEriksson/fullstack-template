@@ -57,11 +57,11 @@ class Configuration:
         return self._environment.get_string(Variables.password)
 
     @cached_property
-    def database(self) -> str:
+    def name(self) -> str:
         return self._environment.get_string(Variables.database)
 
     @cached_property
-    def test_database(self) -> str:
+    def test(self) -> str:
         return self._environment.get_string(Variables.test_database)
 
     @cached_property
@@ -74,8 +74,5 @@ class Configuration:
 
     @cached_property
     def url(self) -> str:
-        database = (
-            self.test_database if self._configuration.mode == "test" else self.database
-        )
-        print(f"using database {database}")
+        database = self.test if self._configuration.mode == "test" else self.name
         return f"postgresql+psycopg://{self.username}:{self.password}@{self.host}:{self.port}/{database}"
