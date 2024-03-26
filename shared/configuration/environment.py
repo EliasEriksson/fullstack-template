@@ -5,8 +5,6 @@ import os
 TValue = str | int | float | None
 TEnvironment = dict[str, TValue]
 
-# /home/eliaseriksson/dev/eliaseriksson/fullstack-template/shared/configuration/environment.py
-
 
 class EnvironmentError(Exception):
     pass
@@ -27,11 +25,9 @@ class EnvironmentValueTypeError(EnvironmentError):
 
 
 class TVariables(Protocol):
-    def __iter__(self) -> Iterable[str]:
-        ...
+    def __iter__(self) -> Iterable[str]: ...
 
-    def __getitem__(self, item: str) -> TValue:
-        ...
+    def __getitem__(self, item: str) -> TValue: ...
 
 
 class Environment:

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import *
 import os
 from .types import TEnvironment, TVariables
 from .exceptions import EnvironmentMissingVariableError

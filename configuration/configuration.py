@@ -18,6 +18,7 @@ class Configuration(Singleton):
     def __init__(
         self, *, cli: TEnvironment | None = None, file: TEnvironment | None = None
     ) -> None:
+        print("initiating new instance")
         environment = Environment(
             {**Environment.clean(file or {}), **Environment.clean(cli or {})}
         )

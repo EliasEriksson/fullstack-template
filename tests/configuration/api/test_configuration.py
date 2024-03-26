@@ -1,3 +1,5 @@
+import os
+
 from configuration import Configuration
 from configuration.api.variables import Variables
 from pathlib import Path
@@ -15,6 +17,7 @@ public_pattern = re.compile(
 
 
 async def test_modified_defaults(environment: None) -> None:
+    os.environ.clear()
     cli = {
         Variables.password_pepper: "pepper",
         Variables.jwt_private_key: __file__,
@@ -31,6 +34,7 @@ async def test_modified_defaults(environment: None) -> None:
 
 
 async def test_overwriting_defaults(environment: None) -> None:
+    os.environ.clear()
     cli = {
         Variables.password_pepper: "",
         Variables.jwt_private_key: None,
@@ -46,7 +50,9 @@ async def test_overwriting_defaults(environment: None) -> None:
 
 
 def test_defaults(environment: None) -> None:
-    configuration = Configuration()
+    os.environ.clear()
+    cli = {}
+    configuration = Configuration(cli=cli)
     assert configuration.mode == "test"
     assert private_pattern.search(configuration.api.jwt_private_key)
     assert public_pattern.search(configuration.api.jwt_public_key)

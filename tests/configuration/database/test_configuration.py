@@ -1,12 +1,15 @@
+import os
 from configuration import Configuration
 from ..fixtures import environment
 from configuration.variables import Variables as ConfigurationVariables
 from configuration.database.variables import Variables
 
 
-async def test_defaults(environment: None) -> None:
-    configuration = Configuration()
-    assert configuration.mode == "test"
+async def test_defaults_dev(environment: None) -> None:
+    os.environ.clear()
+    cli = {ConfigurationVariables.mode: "dev"}
+    configuration = Configuration(cli=cli)
+    assert configuration.mode == "dev"
     username = configuration.database.username
     assert username == "fullstack"
     password = configuration.database.password
@@ -20,22 +23,24 @@ async def test_defaults(environment: None) -> None:
     port = configuration.database.port
     assert port == 5432
     url = configuration.database.url
-    assert url == f"postgresql+psycopg://{username}:{password}@{host}:{port}/{test}"
-
-
-async def test_default_dev(environment: None) -> None:
-    cli = {ConfigurationVariables.mode: "dev"}
-    configuration = Configuration(cli=cli)
-    username = configuration.database.username
-    password = configuration.database.password
-    name = configuration.database.name
-    host = configuration.database.host
-    port = configuration.database.port
-    url = configuration.database.url
     assert url == f"postgresql+psycopg://{username}:{password}@{host}:{port}/{name}"
 
 
+async def test_default_test(environment: None) -> None:
+    os.environ.clear()
+    cli = {ConfigurationVariables.mode: "test"}
+    configuration = Configuration(cli=cli)
+    username = configuration.database.username
+    password = configuration.database.password
+    test = configuration.database.test
+    host = configuration.database.host
+    port = configuration.database.port
+    url = configuration.database.url
+    assert url == f"postgresql+psycopg://{username}:{password}@{host}:{port}/{test}"
+
+
 async def test_modified_defaults(environment: None) -> None:
+    os.environ.clear()
     cli = {
         ConfigurationVariables.mode: "dev",
         Variables.username: "not-fullstack",
