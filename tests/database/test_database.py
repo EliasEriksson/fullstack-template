@@ -16,6 +16,7 @@ async def database():
 
 
 async def test_user(database: Database) -> None:
+    print("USED CONNECTION URL:", Configuration().database.url)
     async with database._session_maker() as session:
         users = await session.execute(select(models.User))
         assert len(users.scalars().all()) == 0
