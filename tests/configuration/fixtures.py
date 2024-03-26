@@ -1,5 +1,5 @@
+from configuration import Configuration
 import os
-
 import pytest
 
 
@@ -9,3 +9,4 @@ async def environment():
     yield
     os.environ.clear()
     os.environ.update(original)
+    Configuration(cli=original)
