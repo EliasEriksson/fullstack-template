@@ -42,7 +42,7 @@ class Configuration:
                     Variables.username: "fullstack",
                     Variables.password: "fullstack",
                     Variables.name: "fullstack",
-                    Variables.test_database: "fullstack-test",
+                    Variables.test: "fullstack-test",
                     Variables.host: "localhost",
                     Variables.port: 5432,
                 }
@@ -62,7 +62,7 @@ class Configuration:
 
     @cached_property
     def test(self) -> str:
-        return self._environment.get_string(Variables.test_database)
+        return self._environment.get_string(Variables.test)
 
     @cached_property
     def host(self) -> str:

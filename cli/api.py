@@ -1,56 +1,16 @@
 from __future__ import annotations
-from functools import reduce
+from configuration.environment.types import TEnvironment
+from configuration import Configuration
+from .options import configuration_options
 import uvicorn
 import click
-from shared.configuration.environment import TEnvironment
-from database.configuration_old import DatabaseConfiguration
-from api.configuration import ApiConfiguration
-from api.configuration import Variables as ApiVariables
-from .database import database_configuration
 
 cli = click.Group("api")
 
 
-def api_configuration(command):
-    options = (
-        click.option(
-            "--jwt-private-key",
-            ApiVariables.jwt_private_key,
-            type=str,
-            help="Private key for signing JWTs.",
-        ),
-        click.option(
-            "--jwt-public-key",
-            ApiVariables.jwt_public_key,
-            type=str,
-            help="Public key to verify JWTs.",
-        ),
-        click.option(
-            "--password-pepper",
-            ApiVariables.password_pepper,
-            type=str,
-            help="Pepper used for hashing passwords.",
-        ),
-        click.option(
-            "--mode",
-            ApiVariables.mode,
-            type=click.Choice(["prod", "dev"]),
-            help="THe mode in which the application is run in. Development (dev) or production (prod)",
-        ),
-        click.option(
-            "--api-port",
-            ApiVariables.port,
-            type=int,
-            help="Port for the api to bind to.",
-        ),
-    )
-    return reduce(lambda result, option: option(result), options, command)
-
-
 @cli.command()
-@database_configuration
-@api_configuration
+@configuration_options
 def start(**environment: TEnvironment) -> None:
-    DatabaseConfiguration(cli=environment)
-    api = ApiConfiguration(cli=environment)
-    uvicorn.run("api:api", port=api.port, log_level="info")
+    Configuration(cli=environment)
+    configuration = Configuration(cli=environment)
+    uvicorn.run("api:api", port=configuration.api.port, log_level="info")
