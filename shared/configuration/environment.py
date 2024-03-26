@@ -25,9 +25,11 @@ class EnvironmentValueTypeError(EnvironmentError):
 
 
 class TVariables(Protocol):
-    def __iter__(self) -> Iterable[str]: ...
+    def __iter__(self) -> Iterable[str]:
+        ...
 
-    def __getitem__(self, item: str) -> TValue: ...
+    def __getitem__(self, item: str) -> TValue:
+        ...
 
 
 class Environment:
