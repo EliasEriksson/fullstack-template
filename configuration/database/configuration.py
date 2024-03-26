@@ -39,10 +39,10 @@ class Configuration:
         if self._configuration.mode != "prod":
             self._environment.write_missing(
                 {
-                    Variables.username: "lite-star",
-                    Variables.password: "lite-star",
-                    Variables.database: "lite-star",
-                    Variables.test_database: "lite-star-test",
+                    Variables.username: "fullstack",
+                    Variables.password: "fullstack",
+                    Variables.name: "fullstack",
+                    Variables.test_database: "fullstack-test",
                     Variables.host: "localhost",
                     Variables.port: 5432,
                 }
@@ -58,7 +58,7 @@ class Configuration:
 
     @cached_property
     def name(self) -> str:
-        return self._environment.get_string(Variables.database)
+        return self._environment.get_string(Variables.name)
 
     @cached_property
     def test(self) -> str:
