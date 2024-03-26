@@ -9,6 +9,7 @@ from shared import hash
 @pytest.fixture
 async def database():
     configuration = Configuration()
+    print("USING CONNECTION URL:", configuration.database.url)
     database = Database(configuration)
     await database.create()
     yield database
