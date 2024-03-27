@@ -1,54 +1,47 @@
 from __future__ import annotations
-from pathlib import Path
-from shared.configuration import Configuration as BaseConfiguration
-from shared.configuration import Variables as BaseVariables
-from shared.configuration.environment import EnvironmentMissingVariableError
-from shared.configuration.environment import TEnvironment
+from typing import *
+
 from functools import cached_property
+from pathlib import Path
+from ..environment.exceptions import EnvironmentMissingVariableError
+from configuration.environment.environment import Environment
+from .variables import Variables
+
+if TYPE_CHECKING:
+    from ..configuration import Configuration as Parent
 
 
-class Variables(BaseVariables):
-    port = "API_PORT"
-    jwt_private_key = "JWT_PRIVATE_KEY"
-    jwt_public_key = "JWT_PUBLIC_KEY"
-    password_pepper = "PASSWORD_PEPPER"
+class Configuration:
+    _configuration: Parent
+    _environment: Environment
 
-
-class ApiConfiguration(BaseConfiguration):
-    def __init__(
-        self,
-        *,
-        cli: TEnvironment | None = None,
-        file: TEnvironment | None = None,
-        defaults: TEnvironment | None = None,
-    ) -> None:
-        super().__init__(
-            Variables,
-            cli=cli,
-            file=file,
-            defaults={
-                Variables.password_pepper: "",
-                Variables.port: 8080,
-                **(defaults or {}),
-            },
-        )
+    def __init__(self, configuration: Parent, environment: Environment) -> None:
+        self._configuration = configuration
+        self._environment = environment
+        if self._configuration.mode != "prod":
+            self._environment.write_missing(
+                {
+                    Variables.port: 8080,
+                    Variables.password_pepper: "",
+                }
+            )
 
     @cached_property
     def port(self) -> int:
-        return self.environment.get_int(Variables.port)
+        return self._environment.get_int(Variables.port)
 
     @cached_property
     def password_pepper(self) -> str:
-        return self.environment.get_string(Variables.password_pepper)
+        return self._environment.get_string(Variables.password_pepper)
 
     @cached_property
     def jwt_private_key(self) -> str:
         try:
-            result = self.environment.get_string(Variables.jwt_private_key)
+            result = self._environment.get_string(Variables.jwt_private_key)
             with Path(result) as file:
                 return file.read_text()
         except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
+            if self._configuration.mode == "prod":
                 raise error
             return (
                 "-----BEGIN PRIVATE KEY-----\n"
@@ -109,11 +102,11 @@ class ApiConfiguration(BaseConfiguration):
     @cached_property
     def jwt_public_key(self) -> str:
         try:
-            result = self.environment.get_string(Variables.jwt_public_key)
+            result = self._environment.get_string(Variables.jwt_public_key)
             with Path(result) as file:
                 return file.read_text()
         except EnvironmentMissingVariableError as error:
-            if self.mode == "prod":
+            if self._configuration.mode == "prod":
                 raise error
             return (
                 "-----BEGIN PUBLIC KEY-----\n"

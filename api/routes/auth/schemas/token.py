@@ -6,7 +6,7 @@ from msgspec import field
 from datetime import datetime
 from datetime import timedelta
 from database import models
-from api.configuration import ApiConfiguration
+from configuration import Configuration
 from jose import jwt
 from jose.exceptions import JWSError
 from jose.exceptions import JWKError
@@ -66,11 +66,11 @@ class Token(Struct):
         }
 
     def encode(self) -> str:
-        configuration = ApiConfiguration()
+        configuration = Configuration()
         try:
             return jwt.encode(
                 self._to_jose_dict(),
-                key=configuration.jwt_private_key,
+                key=configuration.api.jwt_private_key,
                 algorithm=Algorithms.RS512,
             )
         except JWSError:
@@ -92,12 +92,12 @@ class Token(Struct):
 
     @classmethod
     def decode(cls, token: str, audience: str | URL) -> Token:
-        configuration = ApiConfiguration()
+        configuration = Configuration()
         try:
             return cls._from_jose_dict(
                 jwt.decode(
                     token,
-                    key=configuration.jwt_public_key,
+                    key=configuration.api.jwt_public_key,
                     algorithms=[Algorithms.RS512],
                     audience=str(audience),
                 )

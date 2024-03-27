@@ -1,5 +1,5 @@
 from __future__ import annotations
-from . import DatabaseConfiguration
+from configuration import Configuration
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,16 +10,16 @@ from .session import Session
 
 
 class Database:
-    _configuration: DatabaseConfiguration
+    _configuration: Configuration
     _engine: AsyncEngine
     _session_maker: async_sessionmaker[AsyncSession]
     _session: AsyncSession | None
 
-    def __init__(self, configuration: DatabaseConfiguration | None = None) -> None:
+    def __init__(self, configuration: Configuration | None = None) -> None:
         self._configuration = (
-            configuration if configuration is not None else DatabaseConfiguration()
+            configuration if configuration is not None else Configuration()
         )
-        self._engine = create_async_engine(self._configuration.url, echo=False)
+        self._engine = create_async_engine(self._configuration.database.url, echo=False)
         self._session_maker = async_sessionmaker(self._engine, expire_on_commit=False)
 
     async def create(self) -> None:
@@ -32,7 +32,7 @@ class Database:
             drop_alembic = text(f"DROP TABLE IF EXISTS alembic_version;")
             await connection.execute(drop_alembic)
 
-        migrations = self._configuration.migrations
+        migrations = self._configuration.database.migrations
         if migrations.exists():
             for content in migrations.iterdir():
                 if content.is_file():
