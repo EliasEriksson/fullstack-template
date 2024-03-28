@@ -12,7 +12,6 @@ class Base(Struct):
     id: UUID
     created: datetime
     modified: datetime
-    etag: str
 
 
 class Resource(Struct, Generic[T]):
