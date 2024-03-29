@@ -20,9 +20,10 @@ from litestar.datastructures.url import URL
 
 class Token(Struct):
     audience: str
+    issuer: str
     subject: UUID
-    expires: datetime
     issued: datetime
+    expires: datetime
 
     def refresh(self) -> Token:
         self.issued = datetime.fromtimestamp(round(datetime.now().timestamp()))
@@ -32,6 +33,7 @@ class Token(Struct):
     def _to_dict(self):
         return {
             Claims.audience: self.audience,
+            Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
@@ -45,12 +47,13 @@ class Token(Struct):
                 algorithm=Algorithms.RS512,
             )
         except JWSError as error:
-            raise TokenEncodeException() from error
+            raise TokenEncodeException()
 
     @classmethod
     def _from_dict(cls, token: dict[str, Any]) -> Token:
         return cls(
             audience=token[Claims.audience],
+            issuer=token[Claims.issuer],
             subject=UUID(token[Claims.subject]),
             expires=datetime.fromtimestamp(token[Claims.expires]),
             issued=datetime.fromtimestamp(token[Claims.issued]),
@@ -67,4 +70,4 @@ class Token(Struct):
                 )
             )
         except (JWKError, ExpiredSignatureError) as error:
-            raise TokenDecodeException() from error
+            raise TokenDecodeException()
