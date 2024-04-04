@@ -1,3 +1,3 @@
-from .user import User
-from .creatable import Creatable
-from .patchable import Patchable
+from .user import User, UserProtocol
+from .creatable import Creatable, CreatableProtocol
+from .patchable import Patchable, PatchableProtocol

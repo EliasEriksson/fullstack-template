@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import *
-
 from msgspec import Struct
 from uuid import UUID
 from datetime import datetime
@@ -17,13 +16,15 @@ from jose.exceptions import ExpiredSignatureError
 from litestar.datastructures.url import URL
 
 
-class Token(Struct):
+class TokenProtocol(Protocol):
     audience: str
     issuer: str
     subject: UUID
     issued: datetime
     expires: datetime
 
+
+class Token(Struct, TokenProtocol):
     def refresh(self) -> Token:
         self.issued = datetime.fromtimestamp(round(datetime.now().timestamp()))
         self.expires = self.issued + timedelta(minutes=30)

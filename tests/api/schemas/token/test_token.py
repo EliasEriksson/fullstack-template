@@ -15,7 +15,6 @@ async def test_constants() -> None:
     assert schemas.Claims.issuer == "iss"
 
 
-@pytest.mark.usefixtures()
 async def test_encode_decode(
     token: schemas.Token,
     audience: str,

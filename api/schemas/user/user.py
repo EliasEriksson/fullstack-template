@@ -1,7 +1,12 @@
 from __future__ import annotations
-from .creatable import Creatable
-from ..base import Base
+from typing import *
+from .. import password
+from .. import base
 
 
-class User(Base, Creatable):
-    pass
+class UserProtocol(base.BaseProtocol, Protocol):
+    email: str
+    password: password.PasswordProtocol
+
+
+class User(base.Base, UserProtocol): ...
