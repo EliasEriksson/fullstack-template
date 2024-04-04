@@ -1,13 +1,9 @@
 import pytest
 from api.schemas import token as schemas
-from datetime import datetime
-from datetime import timedelta
-from uuid import uuid4
-
-# from ..fixtures import audience
+from ..conftest import audience
 import re
 
-jwt_pattern = re.compile(r"^ey[^.]+\.[^.]+\.[^.]+$")
+jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
 
 
 async def test_constants() -> None:
@@ -19,16 +15,17 @@ async def test_constants() -> None:
     assert schemas.Claims.issuer == "iss"
 
 
-@pytest.mark.usefixtures("token", "issuer", "now", "soon")
+@pytest.mark.usefixtures()
 async def test_encode_decode(
     token: schemas.Token,
     audience: str,
-    # now: datetime,
-    # soon: datetime,
-    # issuer: str,
 ) -> None:
     jwt = token.encode()
     assert isinstance(jwt, str)
     assert jwt_pattern.match(jwt)
     result = schemas.Token.decode(jwt, audience)
-    assert result == token
+    assert result.audience == token.audience
+    assert result.issuer == token.issuer
+    assert result.issued == token.issued
+    assert result.subject == token.subject
+    assert result.expires == token.expires

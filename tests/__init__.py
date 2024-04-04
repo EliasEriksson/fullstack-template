@@ -1,4 +1,4 @@
 from . import api
 from . import database
 from . import configuration
-from . import fixtures
+from . import conftest

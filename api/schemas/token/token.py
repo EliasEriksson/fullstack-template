@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import *
 
-from litestar.openapi.spec import Schema
 from msgspec import Struct
 from uuid import UUID
 from datetime import datetime
@@ -47,7 +46,7 @@ class Token(Struct):
                 algorithm=Algorithms.RS512,
             )
         except JWSError as error:
-            raise TokenEncodeException()
+            raise TokenEncodeException() from error
 
     @classmethod
     def _from_dict(cls, token: dict[str, Any]) -> Token:
@@ -70,4 +69,4 @@ class Token(Struct):
                 )
             )
         except (JWKError, ExpiredSignatureError) as error:
-            raise TokenDecodeException()
+            raise TokenDecodeException() from error

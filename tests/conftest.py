@@ -7,15 +7,15 @@ from dataclasses import dataclass
 
 @dataclass
 class Times:
-    now = datetime.now()
+    now = datetime.now().replace(microsecond=0)
     soon = now + timedelta(minutes=20)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 async def now():
     yield Times.now
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 async def soon():
     yield Times.soon
