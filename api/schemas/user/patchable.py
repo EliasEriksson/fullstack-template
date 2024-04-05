@@ -5,11 +5,11 @@ from msgspec import field
 from .. import password
 
 
-class PatchableProtocol(Protocol):
-    email: str | None
-    password: password.PatchableProtocol | None
+class UserProtocol(Protocol):
+    email: str
+    hash: bytes
 
 
-class Patchable(Struct, PatchableProtocol):
+class Patchable(Struct):
     email: str | None = field(default=None)
-    password: password.PatchableProtocol | None = field(default=None)
+    password: password.Patchable | None = field(default=None)

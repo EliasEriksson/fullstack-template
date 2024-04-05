@@ -1,3 +1,3 @@
-from .password import Password, PasswordProtocol
-from .creatable import Creatable, CreatableProtocol
-from .patchable import Patchable, PatchableProtocol
+from .password import Password
+from .creatable import Creatable
+from .patchable import Patchable

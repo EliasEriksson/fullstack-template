@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import *
 from msgspec import Struct
-from uuid import UUID
 from datetime import datetime
 from datetime import timedelta
 from configuration import Configuration
@@ -14,14 +13,11 @@ from jose.exceptions import JWSError
 from jose.exceptions import JWKError
 from jose.exceptions import ExpiredSignatureError
 from litestar.datastructures.url import URL
+from uuid import UUID
 
 
-class TokenProtocol(Protocol):
-    audience: str
-    issuer: str
-    subject: UUID
-    issued: datetime
-    expires: datetime
+class User(Protocol):
+    id: UUID
 
 
 class Token(Struct):
@@ -31,9 +27,17 @@ class Token(Struct):
     issued: datetime
     expires: datetime
 
+    @staticmethod
+    def _now() -> datetime:
+        return datetime.now().replace(microsecond=0)
+
+    @staticmethod
+    def _expires(datetime: datetime) -> datetime:
+        return datetime + timedelta(minutes=20)
+
     def refresh(self) -> Token:
-        self.issued = datetime.fromtimestamp(round(datetime.now().timestamp()))
-        self.expires = self.issued + timedelta(minutes=30)
+        self.issued = self._now()
+        self.expires = self._expires(self.issued)
         return self
 
     def _to_dict(self):
@@ -77,3 +81,14 @@ class Token(Struct):
             )
         except (JWKError, ExpiredSignatureError) as error:
             raise TokenDecodeException() from error
+
+    @classmethod
+    def from_user(cls, user: User, audience: str | URL, issuer: str | URL) -> Token:
+        now = cls._now()
+        return cls(
+            issuer=str(issuer),
+            audience=str(audience),
+            subject=user.id,
+            issued=now,
+            expires=cls._expires(now),
+        )
