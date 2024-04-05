@@ -9,4 +9,6 @@ class UserProtocol(base.BaseProtocol, Protocol):
     password: password.PasswordProtocol
 
 
-class User(base.Base, UserProtocol): ...
+class User(base.Base):
+    email: str
+    password: password.PasswordProtocol

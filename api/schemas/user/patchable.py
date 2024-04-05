@@ -11,5 +11,5 @@ class PatchableProtocol(Protocol):
 
 
 class Patchable(Struct, PatchableProtocol):
-    email = field(default=None)
-    password = field(default=None)
+    email: str | None = field(default=None)
+    password: password.PatchableProtocol | None = field(default=None)

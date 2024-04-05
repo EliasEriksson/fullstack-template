@@ -10,5 +10,6 @@ class CreatableProtocol(Protocol):
     password: password.CreatableProtocol | None
 
 
-class Creatable(Struct, CreatableProtocol):
-    password = field(default=None)
+class Creatable(Struct):
+    email: str
+    password: password.CreatableProtocol | None = field(default=None)

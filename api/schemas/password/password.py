@@ -8,6 +8,8 @@ class PasswordProtocol(Protocol):
     password: str
 
 
-class Password(Struct, PasswordProtocol):
+class Password(Struct):
+    password: str
+
     def hash(self) -> bytes:
         return hash.password(self.password)

@@ -24,7 +24,13 @@ class TokenProtocol(Protocol):
     expires: datetime
 
 
-class Token(Struct, TokenProtocol):
+class Token(Struct):
+    audience: str
+    issuer: str
+    subject: UUID
+    issued: datetime
+    expires: datetime
+
     def refresh(self) -> Token:
         self.issued = datetime.fromtimestamp(round(datetime.now().timestamp()))
         self.expires = self.issued + timedelta(minutes=30)

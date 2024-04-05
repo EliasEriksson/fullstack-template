@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import *
 from . import creatable
 
 
-class PatchableProtocol(creatable.Protocol, Protocol):
+class PatchableProtocol(creatable.CreatableProtocol):
     old: str
 
 
-class Patchable(creatable.Creatable, PatchableProtocol): ...
+class Patchable(creatable.Creatable):
+    old: str

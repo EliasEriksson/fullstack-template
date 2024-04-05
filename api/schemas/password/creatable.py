@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import Protocol
 from . import password
 
 
-class CreatableProtocol(password.Protocol, Protocol):
+class CreatableProtocol(password.Protocol):
     repeat: str
 
 
-class Creatable(password.Password, CreatableProtocol): ...
+class Creatable(password.Password):
+    repeat: str

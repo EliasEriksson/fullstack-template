@@ -11,4 +11,7 @@ class BaseProtocol(Protocol):
     created: datetime
 
 
-class Base(Struct, BaseProtocol): ...
+class Base(Struct):
+    id: UUID
+    modified: datetime
+    created: datetime
