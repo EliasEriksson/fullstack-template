@@ -35,12 +35,14 @@ class Token(Model, TokenProtocol):
         return datetime.now().replace(microsecond=0)
 
     @staticmethod
-    def _expires(datetime: datetime) -> datetime:
-        return datetime + timedelta(minutes=20)
+    def _expires(datetime: datetime, duration: timedelta | None = None) -> datetime:
+        return datetime + (duration or timedelta(minutes=20))
 
-    def refresh(self) -> Token:
-        self.issued = self._now()
-        self.expires = self._expires(self.issued)
+    def refresh(
+        self, *, issued: datetime | None = None, duration: timedelta | None = None
+    ) -> Token:
+        self.issued = issued or self._now()
+        self.expires = self._expires(self.issued, duration)
         return self
 
     def _to_dict(self):
