@@ -6,7 +6,7 @@ from litestar.connection import ASGIConnection
 from litestar.middleware import AbstractAuthenticationMiddleware
 from litestar.middleware import AuthenticationResult
 from database import Database
-from api.routes.auth.schemas.token import Token
+from ...schemas.token import Token
 from .exceptions import TokenDecodeException
 from base64 import b64decode
 import re

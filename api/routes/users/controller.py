@@ -18,11 +18,11 @@ from ...exceptions import ForbiddenException
 from ...exceptions import PreconditionFailedException
 from ...schemas import Resource
 from ...schemas import PagedResource
-from api.routes.users.schemas.users import User
-from api.routes.users.schemas.users import Creatable
-from api.routes.users.schemas.users import Patchable
+from ...schemas.user import User
+from ...schemas.user import Creatable
+from ...schemas.user import Patchable
+from ...schemas.token import Token
 from shared import hash
-from api.routes.auth.schemas.token import Token
 
 
 class Controller(LitestarController):
@@ -39,8 +39,8 @@ class Controller(LitestarController):
     ) -> Response[Resource[User]]:
         async with Database() as session:
             async with session.transaction():
-                created = await session.users.create(Creatable.create(data))
-        result = User.from_model(created)
+                created = await session.users.create(models.User.from_creatable(data))
+        result = User.from_object(created)
         return Response(
             Resource(result),
             headers=[ResponseHeader(name="ETag", value=result.etag)],
@@ -61,7 +61,7 @@ class Controller(LitestarController):
         if not result:
             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
         return Response(
-            Resource(result),
+            Resource.from_object(result),
             headers=[
                 ResponseHeader(
                     name="ETag",
@@ -83,7 +83,7 @@ class Controller(LitestarController):
                 result, page = await session.users.list(emails, size, page)
         return Response(
             PagedResource(
-                [User.from_model(user) for user in result],
+                [User.from_object(user) for user in result],
                 page,
             )
         )
@@ -113,7 +113,7 @@ class Controller(LitestarController):
                 raise PreconditionFailedException(f"This user already changed.")
             async with session.transaction():
                 patched = await session.users.patch(data.patch(current))
-        result = User.from_model(patched)
+        result = User.from_object(patched)
         return Response(
             Resource(result),
             headers=[ResponseHeader(name="ETag", value=result.etag)],

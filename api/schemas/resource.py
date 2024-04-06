@@ -1,9 +1,14 @@
 from __future__ import annotations
 from typing import *
-from msgspec import Struct
+from .model import Model
 
 T = TypeVar("T")
 
 
-class Resource(Struct, Generic[T]):
+class ResourceProtocol(Protocol[T]):
     result: T
+
+
+class Resource(Model, ResourceProtocol[T]):
+    def __init__(self, resource: T) -> None:
+        super().__init__(result=resource)

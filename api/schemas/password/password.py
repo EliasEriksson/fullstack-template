@@ -1,11 +1,14 @@
 from __future__ import annotations
-from msgspec import Struct
+from typing import *
 from shared import hash
 
+# from pydantic import BaseModel
+from ..model import Model
 
-class Password(Struct):
+
+class PasswordProtocol(Protocol):
     password: str
 
-    @property
-    def hash(self) -> bytes:
-        return hash.password(self.password)
+
+class Password(Model, PasswordProtocol):
+    password: str

@@ -11,10 +11,10 @@ from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
 from database import Database
 from database import models
-from .schemas.token import Creatable
-from .schemas.token import Patchable
+from ...schemas.user import Creatable
+from ...schemas.user import Patchable
 from ...schemas import Resource
-from api.routes.auth.schemas.token import Token
+from ...schemas.token import Token
 from .middlewares import BasicAuthentication
 from .middlewares import BearerAuthentication
 
@@ -38,8 +38,8 @@ class Controller(LitestarController):
     ) -> Response[Resource[str]]:
         async with Database() as session:
             async with session.transaction():
-                created = await session.users.create(Creatable.create(data))
-        result = Token.encode_model(created, request.base_url)
+                created = await session.users.create(models.User.from_creatable(data))
+        result = Token.from_user(created, request.base_url, request.base_url).encode()
         return Response(
             Resource(result),
         )
@@ -54,7 +54,9 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, None, Any],
     ) -> Response[Resource[str]]:
-        result = Token.encode_model(request.user, request.base_url)
+        result = Token.from_user(
+            request.user, request.base_url, request.base_url
+        ).encode()
         return Response(
             Resource(result),
         )
@@ -69,14 +71,14 @@ class Controller(LitestarController):
         data: Patchable,
     ) -> Response[Resource[str]]:
         if data.password:
-            if data.password.new != data.password.repeat:
+            if data.password.password != data.password.repeat:
                 raise ClientException("Repeated password not equal to new password.")
             if not request.user.verify(data.password.old):
                 raise ClientException("Password missmatch.")
         async with Database() as session:
             async with session.transaction():
-                patched = await session.users.patch(data.patch(request.user))
-        result = Token.encode_model(patched, request.base_url)
+                patched = await session.users.patch(request.user.patch(data))
+        result = Token.from_user(patched, request.base_url, request.base_url).encode()
         return Response(
             Resource(result),
         )

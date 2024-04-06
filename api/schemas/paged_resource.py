@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-from msgspec import Struct
+from .model import Model
 from dataclasses import dataclass
 from math import ceil
 
@@ -23,6 +23,11 @@ class Page:
         self.previous = min(current - 1, self.last) if current != 0 else None
 
 
-class PagedResource(Struct, Generic[T]):
+class PageResourceProtocol(Protocol[T]):
     result: list[T]
     page: Page
+
+
+class PagedResource(Model, PageResourceProtocol[T]):
+    def __init__(self, resources: list[T], page: Page) -> None:
+        super().__init__(result=resources, page=page)

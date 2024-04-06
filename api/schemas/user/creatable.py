@@ -1,9 +1,13 @@
 from __future__ import annotations
-from msgspec import Struct
-from msgspec import field
+from typing import *
+from ..model import Model
 from .. import password
 
 
-class Creatable(Struct):
+class CreatableProtocol(Protocol):
     email: str
-    password: password.Creatable | None = field(default=None)
+    password: password.CreatableProtocol | None
+
+
+class Creatable(Model, CreatableProtocol):
+    password: password.Creatable | None

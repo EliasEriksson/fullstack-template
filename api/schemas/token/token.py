@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import *
-from msgspec import Struct
 from datetime import datetime
 from datetime import timedelta
 from configuration import Configuration
@@ -14,19 +13,23 @@ from jose.exceptions import JWKError
 from jose.exceptions import ExpiredSignatureError
 from litestar.datastructures.url import URL
 from uuid import UUID
+from sqlalchemy.orm import Mapped
+from ..model import Model
 
 
 class User(Protocol):
-    id: UUID
+    id: Mapped[UUID] | UUID
 
 
-class Token(Struct):
+class TokenProtocol(Protocol):
     audience: str
     issuer: str
     subject: UUID
     issued: datetime
     expires: datetime
 
+
+class Token(Model, TokenProtocol):
     @staticmethod
     def _now() -> datetime:
         return datetime.now().replace(microsecond=0)
