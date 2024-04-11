@@ -1,20 +1,14 @@
-import typing
+from typing import *
 from pydantic import BaseModel
 
 
-TProtocol = typing.TypeVar("TProtocol", bound="Protocol")
-TModel = typing.TypeVar("TModel", bound=typing.Annotated["Model", "Protocol"])
+TProtocol = TypeVar("TProtocol", bound="Protocol")
+TModel = TypeVar("TModel", bound=Annotated["Model", "Protocol"])
 
 
-class Protocol(typing.Protocol[TProtocol]): ...
-
-
-class Meta(type(BaseModel), type(typing.Protocol)): ...
-
-
-class Model(BaseModel, Protocol, metaclass=Meta):
+class Model(BaseModel):
     @classmethod
-    def from_object(cls: typing.Type[TModel], object: Protocol[TModel]) -> TModel:
+    def from_object(cls: Type[TModel], object: Protocol[TModel]) -> TModel:
         """
         Attempts to create an instance of the caller from the source object.
 

@@ -1,12 +1,11 @@
 from __future__ import annotations
+from typing import *
 from .. import base
 
 
-class UserProtocol(base.BaseProtocol):
+class UserProtocol(base.BaseProtocol, Protocol):
     email: str
 
 
-class User(base.Base, UserProtocol):
-    def __init__(self, user: UserProtocol) -> None:
-        super().__init__(user)
-        self.email = user.email
+class User(base.Base):
+    email: str

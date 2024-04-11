@@ -11,9 +11,7 @@ class BaseProtocol(Protocol):
     created: datetime
 
 
-class Base(Model, BaseProtocol):
-    def __init__(self, base: BaseProtocol) -> None:
-        super().__init__()
-        self.id = base.id
-        self.created = base.created
-        self.modified = base.modified
+class Base(Model):
+    id: UUID
+    modified: datetime
+    created: datetime

@@ -1,11 +1,32 @@
-import asyncio
 from datetime import datetime, timedelta
 from api.schemas import token as schemas
 from ..conftest import audience
 import re
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
+
+
+class User:
+    def __init__(self) -> None:
+        self.id = uuid4()
+
+
+class Token:
+    audience: str
+    issuer: str
+    subject: UUID
+    issued: datetime
+    expires: datetime
+
+    def __init__(
+        self, audience: str, issuer: str, issued: datetime, expires: datetime
+    ) -> None:
+        self.audience = audience
+        self.issuer = issuer
+        self.subject = uuid4()
+        self.issued = issued
+        self.expires = expires
 
 
 async def test_constants() -> None:
@@ -35,43 +56,26 @@ async def test_encode_decode(
 async def test_from_object(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-
-    class Protocol:
-        def __init__(self) -> None:
-            self.audience = audience
-            self.issuer = issuer
-            self.subject = uuid4()
-            self.issued = now
-            self.expires = soon
-
-    assert isinstance(schemas.Token.from_object(Protocol()), schemas.Token)
+    assert isinstance(
+        schemas.Token.from_object(Token(audience, issuer, now, soon)), schemas.Token
+    )
 
 
 async def test_from_user(audience: str, issuer: str) -> None:
-    class Protocol:
-        def __init__(self) -> None:
-            self.id = uuid4()
-
-    assert isinstance(
-        schemas.Token.from_user(Protocol(), audience, issuer), schemas.Token
-    )
+    assert isinstance(schemas.Token.from_user(User(), audience, issuer), schemas.Token)
 
 
 async def test_refresh(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-    class Protocol:
-        def __init__(self) -> None:
-            self.id = uuid4()
-
-    token = schemas.Token.from_user(Protocol(), audience, issuer)
+    token = schemas.Token.from_user(User(), audience, issuer)
     issued = token.issued
     expires = token.expires
     duration = timedelta(minutes=30)
     delta = timedelta(seconds=10)
-    token.refresh(issued=issued + delta, duration=duration)
+    zero = issued + delta
+    token.refresh(issued=zero, duration=duration)
+    assert expires - issued == timedelta(minutes=20)
+    assert token.expires - token.issued == duration
     assert issued != token.issued
     assert issued + delta == token.issued
-    # assert expires != token.expires
-    # assert expires + delta == token.expires
-    # TODO: test expires

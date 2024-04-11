@@ -29,20 +29,27 @@ class TokenProtocol(Protocol):
     expires: datetime
 
 
-class Token(Model, TokenProtocol):
+class Token(Model):
+    audience: str
+    issuer: str
+    subject: UUID
+    issued: datetime
+    expires: datetime
+
     @staticmethod
     def _now() -> datetime:
         return datetime.now().replace(microsecond=0)
 
     @staticmethod
     def _expires(datetime: datetime, duration: timedelta | None = None) -> datetime:
-        return datetime + (duration or timedelta(minutes=20))
+        delta = duration or timedelta(minutes=20)
+        return datetime + delta
 
     def refresh(
         self, *, issued: datetime | None = None, duration: timedelta | None = None
     ) -> Token:
         self.issued = issued or self._now()
-        self.expires = self._expires(self.issued, duration)
+        self.expires = self._expires(issued, duration)
         return self
 
     def _to_dict(self):

@@ -28,6 +28,9 @@ class PageResourceProtocol(Protocol[T]):
     page: Page
 
 
-class PagedResource(Model, PageResourceProtocol[T]):
+class PagedResource(Model, Generic[T]):
+    result: list[T]
+    page: Page
+
     def __init__(self, resources: list[T], page: Page) -> None:
         super().__init__(result=resources, page=page)
