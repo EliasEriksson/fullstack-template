@@ -6,17 +6,6 @@ from database import Database
 from shared import hash
 
 
-@pytest.fixture
-async def database():
-    configuration = Configuration()
-    print("USING MODE:", configuration.mode)
-    print("USING CONNECTION URL:", configuration.database.url)
-    database = Database(configuration)
-    await database.create()
-    yield database
-    await database.delete()
-
-
 async def test_user(database: Database) -> None:
     print("USED CONNECTION URL:", Configuration().database.url)
     async with database._session_maker() as session:

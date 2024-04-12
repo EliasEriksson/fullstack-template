@@ -1,7 +1,7 @@
 import os
 from configuration import Configuration
 from configuration.variables import Variables
-from .fixtures import environment
+from .conftest import environment
 
 
 async def test_acquisition(environment: None):

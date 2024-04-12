@@ -4,7 +4,7 @@ from configuration import Configuration
 from configuration.api.variables import Variables
 from pathlib import Path
 import re
-from ..fixtures import environment
+from ..conftest import environment
 
 private_pattern = re.compile(
     r"^-----BEGIN PRIVATE KEY-----\n.*\n-----END PRIVATE KEY-----(\n|$)",

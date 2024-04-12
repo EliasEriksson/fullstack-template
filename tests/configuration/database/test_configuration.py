@@ -1,6 +1,6 @@
 import os
 from configuration import Configuration
-from ..fixtures import environment
+from ..conftest import environment
 from configuration.variables import Variables as ConfigurationVariables
 from configuration.database.variables import Variables
 
