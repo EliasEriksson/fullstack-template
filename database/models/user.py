@@ -1,12 +1,13 @@
 from __future__ import annotations
 from typing import *
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import Mapped
 from sqlalchemy import String
 from sqlalchemy import LargeBinary
+from sqlalchemy import DateTime
 from database.models.base import Base
 from bcrypt import checkpw
 from datetime import datetime
-from sqlalchemy.orm import Mapped
 from shared import hash
 
 
@@ -34,10 +35,10 @@ class User(Base):
 
     def patch(self, patch: Patch) -> User:
         if patch.email is not None:
-            self.email = patch.email
+            self.email = cast(Mapped[str], patch.email)
         if patch.password is not None:
-            self.hash = self.hash_password(patch.password.password)
-        self.modified = datetime.now()
+            self.hash = cast(Mapped[bytes], self.hash_password(patch.password.password))
+        self.modified = cast(Mapped[DateTime], datetime.now())
         return self
 
     @classmethod
