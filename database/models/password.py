@@ -1,16 +1,13 @@
 from __future__ import annotations
 from typing import *
-from datetime import datetime
 from uuid import UUID
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
-from sqlalchemy import String
+from sqlalchemy import LargeBinary
 from sqlalchemy import ForeignKey
 from database.models.base import Base
 from bcrypt import checkpw
-from shared import hash
-from ..constants import CASCADE
 from ..constants import Lazy
 from ..constants import Cascades
 
@@ -21,7 +18,7 @@ if TYPE_CHECKING:
 class Password(Base):
     __tablename__ = "password"
     hash: Mapped[str] = mapped_column(
-        String(),
+        LargeBinary(),
         nullable=False,
     )
     user_id: Mapped[UUID] = mapped_column(
@@ -34,3 +31,6 @@ class Password(Base):
         cascade=Cascades.default(),
         lazy=Lazy.default(),
     )
+
+    def verify(self, password: str) -> bool:
+        return checkpw(password.encode(), self.hash)
