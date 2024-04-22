@@ -22,6 +22,7 @@ async def token(now: datetime, soon: datetime, audience: str, issuer: str) -> No
         audience=audience,
         issuer=issuer,
         subject=uuid4(),
+        session=uuid4(),
         issued=now,
         expires=soon,
     )

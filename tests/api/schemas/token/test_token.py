@@ -8,14 +8,19 @@ jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
 
 
 class User:
+    id: UUID
+    session: UUID
+
     def __init__(self) -> None:
         self.id = uuid4()
+        self.session = uuid4()
 
 
 class Token:
     audience: str
     issuer: str
     subject: UUID
+    session: UUID
     issued: datetime
     expires: datetime
 
@@ -25,6 +30,7 @@ class Token:
         self.audience = audience
         self.issuer = issuer
         self.subject = uuid4()
+        self.session = uuid4()
         self.issued = issued
         self.expires = expires
 

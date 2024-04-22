@@ -18,13 +18,15 @@ from ..model import Model
 
 
 class User(Protocol):
-    id: Mapped[UUID] | UUID
+    id: UUID
+    session: UUID
 
 
 class TokenProtocol(Protocol):
     audience: str
     issuer: str
     subject: UUID
+    session: UUID
     issued: datetime
     expires: datetime
 
@@ -33,6 +35,7 @@ class Token(Model):
     audience: str
     issuer: str
     subject: UUID
+    session: UUID
     issued: datetime
     expires: datetime
 
@@ -57,6 +60,7 @@ class Token(Model):
             Claims.audience: self.audience,
             Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
+            Claims.session: str(self.session),
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }
@@ -73,13 +77,17 @@ class Token(Model):
 
     @classmethod
     def _from_dict(cls, token: dict[str, Any]) -> Token:
-        return cls(
-            audience=token[Claims.audience],
-            issuer=token[Claims.issuer],
-            subject=UUID(token[Claims.subject]),
-            expires=datetime.fromtimestamp(token[Claims.expires]),
-            issued=datetime.fromtimestamp(token[Claims.issued]),
-        )
+        try:
+            return cls(
+                audience=token[Claims.audience],
+                issuer=token[Claims.issuer],
+                subject=UUID(token[Claims.subject]),
+                session=UUID(token[Claims.session]),
+                expires=datetime.fromtimestamp(token[Claims.expires]),
+                issued=datetime.fromtimestamp(token[Claims.issued]),
+            )
+        except KeyError as error:
+            raise TokenDecodeException from error
 
     @classmethod
     def decode(cls, token: str, audience: str | URL) -> Token:
@@ -101,6 +109,7 @@ class Token(Model):
             issuer=str(issuer),
             audience=str(audience),
             subject=user.id,
+            session=user.session,
             issued=now,
             expires=cls._expires(now),
         )

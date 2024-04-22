@@ -1,52 +1,32 @@
 from __future__ import annotations
 from typing import *
-from sqlalchemy.orm import mapped_column
-from sqlalchemy import String
-from sqlalchemy import LargeBinary
-from database.models.base import Base
-from bcrypt import checkpw
-from datetime import datetime
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
-from shared import hash
+from database.models.base import Base
+from ..constants import Cascades
+from ..constants import Lazy
 
 
-class Password(Protocol):
-    password: str
-
-
-class Patch(Protocol):
-    email: str | None
-    password: Password | None
-
-
-class Creatable(Protocol):
-    email: str
-    password: Password | None
+if TYPE_CHECKING:
+    from .password import Password
+    from .email import Email
+    from .session import Session
 
 
 class User(Base):
     __tablename__ = "user"
-    email: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
-    hash: Mapped[bytes] = mapped_column(LargeBinary(), nullable=False)
-
-    def verify(self, password: str) -> bool:
-        return checkpw(password.encode(), self.hash)
-
-    def patch(self, patch: Patch) -> User:
-        if patch.email is not None:
-            self.email = patch.email
-        if patch.password is not None:
-            self.hash = self.hash_password(patch.password.password)
-        self.modified = datetime.now()
-        return self
-
-    @classmethod
-    def from_creatable(cls, creatable: Creatable) -> User:
-        return cls(
-            email=creatable.email,
-            hash=cls.hash_password(creatable.password.password),
-        )
-
-    @staticmethod
-    def hash_password(password: str) -> bytes:
-        return hash.password(password)
+    emails: Mapped[list[Email]] = relationship(
+        back_populates="user",
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
+    passwords: Mapped[list[Password]] = relationship(
+        back_populates="user",
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
+    sessions: Mapped[list[Session]] = relationship(
+        back_populates="user",
+        cascade=Cascades.default(Cascades.delete_orphan),
+        lazy=Lazy.default(),
+    )
