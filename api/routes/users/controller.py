@@ -37,9 +37,9 @@ class Controller(LitestarController):
         self,
         data: Creatable,
     ) -> Response[Resource[User]]:
-        async with Database() as session:
-            async with session.transaction():
-                created = await session.users.create(models.User.from_creatable(data))
+        async with Database() as client:
+            async with client.transaction():
+                created = await client.users.create(models.User.from_creatable(data))
         result = User.from_object(created)
         return Response(
             Resource(result),
@@ -55,9 +55,9 @@ class Controller(LitestarController):
         self,
         id: UUID,
     ) -> Response[Resource[User]]:
-        async with Database() as session:
-            async with session.transaction():
-                result = User.from_model(await session.users.fetch(id))
+        async with Database() as client:
+            async with client.transaction():
+                result = User.from_model(await client.users.fetch(id))
         if not result:
             raise NotFoundException(detail=f"No user with id: '{id}' exists.")
         return Response(
@@ -78,9 +78,9 @@ class Controller(LitestarController):
         page: Annotated[int, Parameter(ge=0)] = 0,
     ) -> Response[PagedResource[User]]:
         emails = [] if not email else email
-        async with Database() as session:
-            async with session.transaction():
-                result, page = await session.users.list(emails, size, page)
+        async with Database() as client:
+            async with client.transaction():
+                result, page = await client.users.list(emails, size, page)
         return Response(
             PagedResource(
                 [User.from_object(user) for user in result],
@@ -104,15 +104,15 @@ class Controller(LitestarController):
             raise ForbiddenException()
         if data.password and data.password.new != data.password.repeat:
             raise ClientException(f"Repeated password not equal to new password.")
-        async with Database() as session:
-            async with session.transaction():
-                current = await session.users.fetch(id)
+        async with Database() as client:
+            async with client.transaction():
+                current = await client.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
             if hash.etag(current.modified) != etag:
                 raise PreconditionFailedException(f"This user already changed.")
-            async with session.transaction():
-                patched = await session.users.patch(data.patch(current))
+            async with client.transaction():
+                patched = await client.users.patch(data.patch(current))
         result = User.from_object(patched)
         return Response(
             Resource(result),
@@ -131,11 +131,11 @@ class Controller(LitestarController):
     ) -> None:
         if id == request.user.id:
             raise ForbiddenException()
-        async with Database() as session:
-            async with session.transaction():
-                current = await session.users.fetch(id)
+        async with Database() as client:
+            async with client.transaction():
+                current = await client.users.fetch(id)
             if not current:
                 raise NotFoundException(detail=f"No user with id: '{id}' exists.")
-            async with session.transaction():
-                await session.users.delete(current)
+            async with client.transaction():
+                await client.users.delete(current)
         return

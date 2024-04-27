@@ -36,9 +36,9 @@ class Controller(LitestarController):
         request: Request[None, None, Any],
         data: Creatable,
     ) -> Response[Resource[str]]:
-        async with Database() as session:
-            async with session.transaction():
-                created = await session.users.create(models.User.from_creatable(data))
+        async with Database() as client:
+            async with client.transaction():
+                created = await client.users.create(models.User.from_creatable(data))
         result = Token.from_user(created, request.base_url, request.base_url).encode()
         return Response(
             Resource(result),
@@ -75,9 +75,9 @@ class Controller(LitestarController):
                 raise ClientException("Repeated password not equal to new password.")
             if not request.user.verify(data.password.old):
                 raise ClientException("Password missmatch.")
-        async with Database() as session:
-            async with session.transaction():
-                patched = await session.users.patch(request.user.patch(data))
+        async with Database() as client:
+            async with client.transaction():
+                patched = await client.users.patch(request.user.patch(data))
         result = Token.from_user(patched, request.base_url, request.base_url).encode()
         return Response(
             Resource(result),
@@ -91,7 +91,7 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, Token, Any],
     ) -> None:
-        async with Database() as session:
-            async with session.transaction():
-                await session.users.delete(request.user)
+        async with Database() as client:
+            async with client.transaction():
+                await client.users.delete(request.user)
         return

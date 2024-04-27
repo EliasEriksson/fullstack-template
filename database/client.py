@@ -6,7 +6,7 @@ from .operations import Emails
 from .operations import Sessions
 
 
-class Session:
+class Client:
     _session: AsyncSession
     users: Users
     emails: Emails

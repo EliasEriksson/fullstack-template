@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 from . import models
-from .session import Session
+from .client import Client
 
 
 class Database:
@@ -38,9 +38,9 @@ class Database:
                 if content.is_file():
                     content.unlink()
 
-    async def __aenter__(self) -> Session:
+    async def __aenter__(self) -> Client:
         self._session = await self._session_maker(bind=self._engine).__aenter__()
-        return Session(self._session)
+        return Client(self._session)
 
     async def __aexit__(self, *args, **kwargs) -> None:
         if self._session:

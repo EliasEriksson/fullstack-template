@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC
+from abc import ABC, abstractmethod
 from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
 from litestar.connection import ASGIConnection
@@ -39,9 +39,9 @@ class BearerAuthentication(AbstractAuthentication):
             token = Token.decode(jwt, connection.base_url)
         except TokenDecodeException:
             raise self.not_authorized(connection.url)
-        async with Database() as session:
-            async with session.transaction():
-                user = await session.users.fetch(token.subject)
+        async with Database() as client:
+            async with client.transaction():
+                user = await client.users.fetch(token.subject)
         if not user:
             raise self.not_authorized(connection.url)
         return AuthenticationResult(user=user, auth=token)
@@ -72,9 +72,9 @@ class BasicAuthentication(AbstractAuthentication):
             raise self.not_authorized(connection.url)
         if not (email := match.group(1)) or not (password := match.group(2)):
             raise self.not_authorized(connection.url)
-        async with Database() as session:
-            async with session.transaction():
-                users, _ = await session.users.list([email], size=1, page=0)
+        async with Database() as client:
+            async with client.transaction():
+                users, _ = await client.users.list([email], size=1, page=0)
         if not users or not (user := users[0]):
             raise self.not_authorized(connection.url)
         if not user.verify(password):
