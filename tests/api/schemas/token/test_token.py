@@ -7,13 +7,19 @@ from uuid import uuid4, UUID
 jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
 
 
-class User:
+class Session:
+    class User:
+        id: UUID
+
+        def __init__(self) -> None:
+            self.id = uuid4()
+
     id: UUID
-    session: UUID
+    user: User
 
     def __init__(self) -> None:
         self.id = uuid4()
-        self.session = uuid4()
+        self.user = self.User()
 
 
 class Token:
@@ -68,13 +74,15 @@ async def test_from_object(
 
 
 async def test_from_user(audience: str, issuer: str) -> None:
-    assert isinstance(schemas.Token.from_user(User(), audience, issuer), schemas.Token)
+    assert isinstance(
+        schemas.Token.from_session(Session(), audience, issuer), schemas.Token
+    )
 
 
 async def test_refresh(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-    token = schemas.Token.from_user(User(), audience, issuer)
+    token = schemas.Token.from_session(Session(), audience, issuer)
     issued = token.issued
     expires = token.expires
     duration = timedelta(minutes=30)

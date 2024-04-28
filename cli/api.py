@@ -13,4 +13,11 @@ cli = click.Group("api")
 def start(**environment: TEnvironment) -> None:
     Configuration(cli=environment)
     configuration = Configuration(cli=environment)
-    uvicorn.run("api:api", port=configuration.api.port, log_level="info")
+    print("Starting in mode:", configuration.mode)
+    uvicorn.run(
+        "api:api",
+        port=configuration.api.port,
+        log_level="info",
+        reload=configuration.mode == "dev",
+        proxy_headers=True,
+    )

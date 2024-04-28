@@ -24,7 +24,7 @@ class Configuration(Singleton):
         self._environment = environment
         self._environment.write_missing(
             {
-                Variables.mode: "test",
+                Variables.mode: "dev",
             }
         )
         self.api = api.Configuration(self, environment)

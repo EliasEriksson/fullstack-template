@@ -1,7 +1,9 @@
 from litestar import Router
-from .controller import Controller
+
+# from .controller import Controller
 
 router = Router(
     path="",
-    route_handlers=[Controller],
+    # route_handlers=[Controller],
+    route_handlers=[],
 )
