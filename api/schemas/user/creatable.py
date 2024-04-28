@@ -13,15 +13,16 @@ class CreatableProtocol(Protocol):
 class Creatable(Model):
     email: str
 
-    def create(self, agent: str) -> models.User:
+    def create(self, agent: str, host: str) -> models.User:
         user = models.User()
         models.Email(
             address=self.email,
             user=user,
         )
         models.Session(
-            agent=agent,
             expire=datetime.now() + timedelta(days=7),
+            host=host,
+            agent=agent,
             user=user,
         )
         return user

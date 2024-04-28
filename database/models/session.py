@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import String
 from sqlalchemy import ForeignKey
 from sqlalchemy import DateTime
+from sqlalchemy import UniqueConstraint
 from .base import Base
 from ..constants import Cascades
 from ..constants import CASCADE
@@ -19,9 +20,13 @@ if TYPE_CHECKING:
 
 class Session(Base):
     __tablename__ = "session"
+    __table_args__ = tuple(UniqueConstraint("user_id", "agent", "host"))
     expire: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+    )
+    host: Mapped[str] = mapped_column(
+        String(),
     )
     agent: Mapped[str] = mapped_column(
         String(),

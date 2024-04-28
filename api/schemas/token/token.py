@@ -15,11 +15,17 @@ from litestar.datastructures.url import URL
 from uuid import UUID
 from sqlalchemy.orm import Mapped
 from ..model import Model
+from database import models
 
 
 class User(Protocol):
     id: UUID
-    session: UUID
+
+
+class Session(Protocol):
+
+    id: UUID
+    user: User | Mapped[User]
 
 
 class TokenProtocol(Protocol):
@@ -103,15 +109,15 @@ class Token(Model):
             raise TokenDecodeException() from error
 
     @classmethod
-    def from_user(cls, user: User, audience: str | URL, issuer: str | URL) -> Token:
+    def from_session(
+        cls, session: Session | models.Session, audience: str | URL, issuer: str | URL
+    ) -> Token:
         now = cls._now()
         return cls(
             issuer=str(issuer),
             audience=str(audience),
-            subject=user.id,
-            session=user.session,
+            subject=session.user.id,
+            session=session.id,
             issued=now,
             expires=cls._expires(now),
         )
-    @classmethod
-    def from_session(cls, session: Session, audience: str | URL, issuer: str |): -> Token:
