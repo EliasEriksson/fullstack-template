@@ -7,19 +7,17 @@ from litestar import patch
 from litestar import delete
 from litestar import Response
 from litestar import Request
+from litestar.params import Parameter
 from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
 from database import Database
 from database import models
-from ...schemas.user import Creatable
-from ...schemas.user import Patchable
-from ...schemas import Resource
-from ...schemas.token import Token
-from .middlewares import BasicAuthentication
-from .middlewares import BearerAuthentication
+from ... import schemas
+from ...middlewares.authentication import BasicAuthentication
+from ...middlewares.authentication import JwtAuthentication
 
 
-bearer = DefineMiddleware(BearerAuthentication)
+bearer = DefineMiddleware(JwtAuthentication)
 basic = DefineMiddleware(BasicAuthentication)
 
 
@@ -29,19 +27,27 @@ class Controller(LitestarController):
     @post(
         path="/",
         tags=["user"],
-        summary="Register user",
+        summary="Register user.",
     )
     async def create(
         self,
         request: Request[None, None, Any],
-        data: Creatable,
-    ) -> Response[Resource[str]]:
+        agent: Annotated[str, Parameter(header="User-Agent")],
+        data: schemas.user.Creatable,
+    ) -> Response[schemas.resource.Resource[str]]:
         async with Database() as client:
             async with client.transaction():
-                created = await client.users.create(models.User.from_creatable(data))
-        result = Token.from_user(created, request.base_url, request.base_url).encode()
+                created = await client.users.create(data.create(agent))
+            async with client.transaction():
+                session = await client.sessions.fetch_by_agent(created, agent)
+        if session is None:
+            raise ClientException()
+        result = schemas.token.Token.from_user(created)
+        # result = schemas.token.Token.from_user(
+        #     created, request.base_url, request.base_url
+        # ).encode()
         return Response(
-            Resource(result),
+            schemas.Resource(result),
         )
 
     @get(

@@ -1,8 +1,9 @@
 from __future__ import annotations
 from typing import *
 from ..model import Model
-from .. import password
-from pydantic import Field
+from database import models
+from datetime import datetime
+from datetime import timedelta
 
 
 class CreatableProtocol(Protocol):
@@ -11,4 +12,16 @@ class CreatableProtocol(Protocol):
 
 class Creatable(Model):
     email: str
-    password: Annotated[password.Password | None, Field(None)]
+
+    def create(self, agent: str) -> models.User:
+        user = models.User()
+        models.Email(
+            address=self.email,
+            user=user,
+        )
+        models.Session(
+            agent=agent,
+            expire=datetime.now() + timedelta(days=7),
+            user=user,
+        )
+        return user

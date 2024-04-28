@@ -13,6 +13,10 @@ if TYPE_CHECKING:
     from .session import Session
 
 
+class Creatable(Protocol):
+    email: str
+
+
 class User(Base):
     __tablename__ = "user"
     emails: Mapped[list[Email]] = relationship(

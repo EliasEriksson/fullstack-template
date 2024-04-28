@@ -113,3 +113,5 @@ class Token(Model):
             issued=now,
             expires=cls._expires(now),
         )
+    @classmethod
+    def from_session(cls, session: Session, audience: str | URL, issuer: str |): -> Token:

@@ -6,12 +6,13 @@ from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
 from litestar.connection import ASGIConnection
 from litestar.middleware import AuthenticationResult
+from litestar.middleware import AbstractAuthenticationMiddleware
 from database import Database
 from api import schemas
 from datetime import datetime
 
 
-class AbstractAuthentication(ABC):
+class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
     header = "Authorization"
 
     @staticmethod
