@@ -23,7 +23,6 @@ class User(Protocol):
 
 
 class Session(Protocol):
-
     id: UUID
     user: User | Mapped[User]
 
