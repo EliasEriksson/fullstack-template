@@ -3,15 +3,13 @@ from abc import ABC, abstractmethod
 from typing import *
 
 
-class NoNameError(Exception):
-    ...
+class NoNameError(Exception): ...
 
 
 class Name(Protocol):
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
-        ...
+    def name(cls) -> str: ...
 
 
 class Dependency(ABC, Name):

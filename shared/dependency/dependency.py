@@ -18,15 +18,14 @@ class Dependency(ABC):
     def create(cls, name: str) -> Dependency:
         try:
             return cls._registry[name]()
-        except AttributeError as error:
+        except KeyError as error:
             raise DependencyNotFoundError(
                 f"No dependency with name: {name} exits registered under {cls.__name__}"
             ) from error
 
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
-        ...
+    def name(cls) -> str: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
