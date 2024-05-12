@@ -8,7 +8,9 @@ async def test_relationships(database: Database, soon: datetime) -> None:
     async with database as client:
         async with client.transaction():
             user = models.User()
-            session = models.Session(expire=soon, agent="pytest", user=user)
+            session = models.Session(
+                expire=soon, host="example.com", agent="pytest", user=user
+            )
             await client.sessions.create(session)
         id: UUID = session.id
         assert id is not None

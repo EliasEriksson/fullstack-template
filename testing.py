@@ -1,31 +1,31 @@
 from __future__ import annotations
-from abc import ABC, ABCMeta
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import *
 
 
-class Dependency:
-    _key = "_factories"
+class NoNameError(Exception):
+    ...
 
-    def __init_subclass__(cls):
-        cls._set_or_get_factories()
-        cls._factories = {}
+
+class Name(Protocol):
+    @classmethod
+    @abstractmethod
+    def name(cls) -> str:
+        ...
+
+
+class Dependency(ABC, Name):
+    _factories: dict[str, Type[Dependency]] = {}
+
+    def __init_subclass__(cls) -> None:
         cls.__init_subclass__ = classmethod(
-            lambda cls: cls._factories.update({cls.name: cls})
+            lambda factory: cls._factories.update({factory.name(): factory})
         )
 
     @classmethod
-    def create(cls, name: str):
-        factory = cls._set_or_get_factories()
+    def create(cls, name: str) -> Dependency | None:
+        factory = cls._factories.get(name)
         return factory and factory()
-
-    @classmethod
-    def _set_or_get_factories(cls) -> dict[str, Any]:
-        factories = getattr(cls, cls._key)
-        if factories is None:
-            factories = {}
-            setattr(cls, cls._key, factories)
-        return factories
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
@@ -36,15 +36,9 @@ class Email(Dependency, ABC):
 
 
 class Local(Email):
-    name = "local"
-
-
-class Temperature(Dependency, ABC):
-    pass
-
-
-class Smhi(Temperature):
-    name = "smhi"
+    @classmethod
+    def name(cls) -> str:
+        return "local"
 
 
 print(Email.create("local"))
