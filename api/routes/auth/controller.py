@@ -19,6 +19,7 @@ from database import models
 from ... import schemas
 from ...middlewares.authentication import BasicAuthentication
 from ...middlewares.authentication import JwtAuthentication
+from ...services.email import Email
 
 
 bearer = DefineMiddleware(JwtAuthentication)
@@ -41,6 +42,7 @@ class Controller(LitestarController):
         data: schemas.user.Creatable,
     ) -> Response[schemas.resource.Resource[str]]:
         connection = ASGIConnection(scope)
+        await Email.create("local")
         async with Database() as client:
             try:
                 async with client.transaction():

@@ -39,8 +39,8 @@ async def test_instantiation() -> None:
         def name(cls) -> str:
             return "local"
 
-    assert isinstance(Email.create("local"), Local)
+    assert isinstance(await Email.create("local"), Local)
     try:
-        Email.create("does-not-exist")
+        await Email.create("does-not-exist")
     except dependency.exceptions.DependencyNotFoundError:
         pass
