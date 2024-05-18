@@ -11,18 +11,13 @@ class CreatableProtocol(Protocol):
 
 
 class Creatable(Model):
+    # TODO support email array
     email: str
 
-    def create(self, agent: str, host: str) -> models.User:
+    def create(self) -> models.User:
         user = models.User()
         models.Email(
             address=self.email,
-            user=user,
-        )
-        models.Session(
-            expire=datetime.now() + timedelta(days=7),
-            host=host,
-            agent=agent,
             user=user,
         )
         return user

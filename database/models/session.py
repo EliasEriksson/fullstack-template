@@ -27,6 +27,7 @@ class Session(Base):
     )
     host: Mapped[str] = mapped_column(
         String(),
+        nullable=False,
     )
     agent: Mapped[str] = mapped_column(
         String(),

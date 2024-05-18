@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import *
+import asyncio
 from litestar import Controller as LitestarController
 from litestar.connection import ASGIConnection
 from litestar import post
@@ -26,8 +27,11 @@ class Controller(LitestarController):
     path = "/auth"
 
     @get(path="/test")
-    async def test(self) -> None:
-        await Email().send_text("Hello world email.")
+    async def test(
+        self,
+        agent: Annotated[str, Parameter(header="User-Agent")],
+    ) -> None:
+        return
 
     @post(
         path="/",
@@ -36,34 +40,19 @@ class Controller(LitestarController):
     )
     async def create(
         self,
-        connection: ASGIConnection,
-        request: Request[None, None, Any],
-        agent: Annotated[str, Parameter(header="User-Agent")],
         data: schemas.user.Creatable,
     ) -> None:
         async with Database() as client:
             try:
                 async with client.transaction():
-                    created = await client.users.create(
-                        data.create(agent, request.client.host)
-                    )
+                    created = await client.users.create(data.create())
             except IntegrityError as error:
                 raise ClientException("Email already in use.") from error
-            async with client.transaction():
-                session = await client.sessions.fetch_by_connection(
-                    created, connection.client.host, agent
-                )
-        if session is None:
-            raise InternalServerException(
-                "Session not found when it should have been created."
-            )
-        await Email().send_text("Sent an email.")
-        # result = schemas.token.Token.from_session(
-        #     session, request.base_url, request.base_url
-        # )
-        # return Response(
-        #     schemas.Resource(result.encode()),
-        # )
+        mailer = Email()
+        await asyncio.gather(
+            asyncio.create_task(mailer.send_text(email.verification))
+            for email in created.emails
+        )
 
     # @get(
     #     path="/",
