@@ -14,7 +14,7 @@ class Dependency(ABC):
     def __init_subclass__(cls) -> None:
         cls._registry = {}
         cls.__init_subclass__ = classmethod(
-            lambda cls: cls._registry.update({cls.name(): cls})
+            lambda cls: cls._registry.update({cls.foo(): cls})
         )
 
     @classmethod

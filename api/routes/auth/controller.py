@@ -1,12 +1,9 @@
 from __future__ import annotations
 from typing import *
-from ipaddress import ip_address
 from litestar import Controller as LitestarController
 from litestar.connection import ASGIConnection
 from litestar import post
 from litestar import get
-from litestar import patch
-from litestar import delete
 from litestar import Response
 from litestar import Request
 from litestar.params import Parameter
@@ -15,11 +12,10 @@ from litestar.exceptions import ClientException
 from litestar.exceptions import InternalServerException
 from database import Database
 from sqlalchemy.exc import IntegrityError
-from database import models
 from ... import schemas
 from ...middlewares.authentication import BasicAuthentication
 from ...middlewares.authentication import JwtAuthentication
-from ...services.email import Email
+from services.email import Email
 
 
 bearer = DefineMiddleware(JwtAuthentication)
@@ -29,6 +25,10 @@ basic = DefineMiddleware(BasicAuthentication)
 class Controller(LitestarController):
     path = "/auth"
 
+    @get(path="/test")
+    async def test(self) -> None:
+        await Email().send_text("Hello world email.")
+
     @post(
         path="/",
         tags=["user"],
@@ -36,18 +36,16 @@ class Controller(LitestarController):
     )
     async def create(
         self,
-        scope: dict,
+        connection: ASGIConnection,
         request: Request[None, None, Any],
         agent: Annotated[str, Parameter(header="User-Agent")],
         data: schemas.user.Creatable,
-    ) -> Response[schemas.resource.Resource[str]]:
-        connection = ASGIConnection(scope)
-        await Email.create("local")
+    ) -> None:
         async with Database() as client:
             try:
                 async with client.transaction():
                     created = await client.users.create(
-                        data.create(agent, connection.client.host)
+                        data.create(agent, request.client.host)
                     )
             except IntegrityError as error:
                 raise ClientException("Email already in use.") from error
@@ -59,6 +57,7 @@ class Controller(LitestarController):
             raise InternalServerException(
                 "Session not found when it should have been created."
             )
+        await Email().send_text("Sent an email.")
         # result = schemas.token.Token.from_session(
         #     session, request.base_url, request.base_url
         # )
