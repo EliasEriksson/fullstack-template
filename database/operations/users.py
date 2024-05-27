@@ -1,5 +1,7 @@
 from __future__ import annotations
+from typing import *
 from sqlalchemy import select
+from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.operations.crud import CRUD
 from .. import models
@@ -15,7 +17,7 @@ class Users(CRUD[models.User]):
         query = (
             select(models.User, models.Email)
             .join(models.User.emails)
-            .where(models.Email.address == email)
+            .where(cast(ColumnElement, models.Email.address == email))
         )
         result = await self._session.execute(query)
         return result.scalars().one_or_none()

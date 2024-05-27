@@ -1,10 +1,12 @@
 from __future__ import annotations
 from typing import *
 import asyncio
+from uuid import UUID
 from litestar import Controller as LitestarController
 from litestar.connection import ASGIConnection
 from litestar import post
 from litestar import get
+from litestar import patch
 from litestar import Response
 from litestar import Request
 from litestar.params import Parameter
@@ -40,7 +42,7 @@ class Controller(LitestarController):
     )
     async def create(
         self,
-        data: schemas.user.Creatable,
+        data: schemas.auth.Creatable,
     ) -> None:
         async with Database() as client:
             try:
@@ -50,9 +52,36 @@ class Controller(LitestarController):
                 raise ClientException("Email already in use.") from error
         mailer = Email()
         await asyncio.gather(
-            asyncio.create_task(mailer.send_text(email.verification))
-            for email in created.emails
+            *[
+                asyncio.create_task(
+                    mailer.send_text(f"Verification: {email.verification}")
+                )
+                for email in created.emails
+            ]
         )
+
+    @patch(
+        path="/{verification:uuid}",
+        tags=["user"],
+        summary="Complete registration of new user.",
+    )
+    async def patch(
+        self,
+        verification: UUID,
+        data: schemas.auth.Patchable,
+    ) -> None:
+        async with Database() as client:
+            try:
+                async with client.transaction():
+                    email = await client.emails.fetch_by_verification(verification)
+                    if not email:
+                        raise ClientException(
+                            f"Verification {verification} does not exist."
+                        )
+                    email.verified = True
+                    data.patch(email.user)
+            except IntegrityError as error:
+                raise ClientException() from error
 
     # @get(
     #     path="/",

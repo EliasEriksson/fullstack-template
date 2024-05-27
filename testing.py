@@ -1,55 +1,20 @@
-from __future__ import annotations
 from typing import *
-from abc import ABC
-from configuration import Configuration
-from abc import abstractmethod
-from shared.dependency.exceptions import DependencyNotFoundError
+
+from typing_extensions import Self
+
+from pydantic import BaseModel, ValidationError, model_validator
 
 
-class Email(ABC):
-    _registry: dict[str, Type[Email]] = {}
+class UserModel(BaseModel):
+    username: str
+    password1: str
+    password2: str | None
 
-    def __init_subclass__(cls) -> None:
-        print("initializing subclass", cls)
-        cls._registry.update({cls.name(): cls})
-
-    def __new__(cls, *args, **kwargs) -> Email:
-        print("new with class", cls.__name__)
-        configuration = Configuration()
-        try:
-            return super().__new__(cls._registry[configuration.email.provider])
-        except KeyError as error:
-            raise DependencyNotFoundError(
-                f"Email service provider: {configuration.email.provider} does not exist. "
-                f"Available providers: {', '.join(cls._registry.keys())}."
-            ) from error
-
-    @classmethod
-    @abstractmethod
-    def name(cls) -> str:
-        ...
-
-    @abstractmethod
-    async def send_text(self, text: str) -> None:
-        ...
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> Self:
+        if self.password1 != self.password2:
+            raise ValueError("passwords do not match")
+        return self
 
 
-class Local(Email):
-    value: int
-
-    def __init__(self, value: int) -> None:
-        self.value = value
-
-    @classmethod
-    def name(cls) -> str:
-        return "local"
-
-    async def send_text(self, text: str) -> None:
-        print(text)
-
-
-service = Email(123)
-print(service.value)
+print(UserModel(username="scolvin", password1=None))

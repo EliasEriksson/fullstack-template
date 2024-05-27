@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.expression import ColumnElement
 from database.models import Base as BaseModel
 from database.page import Page
 from uuid import UUID
@@ -24,8 +25,8 @@ class CRUD(Generic[T]):
         self._session.add(model)
         return model
 
-    async def fetch(self, id: UUID) -> T | None:
-        query = select(self._model).where(self._model.id == id)
+    async def fetch_by_id(self, id: UUID) -> T | None:
+        query = select(self._model).where(cast(ColumnElement, self._model.id == id))
         result = await self._session.execute(query)
         return result.scalars().one_or_none()
 
@@ -39,7 +40,7 @@ class CRUD(Generic[T]):
         return await self.create(model)
 
     async def delete_by_id(self, id: UUID) -> bool:
-        query = delete(self._model).where(self._model.id == id)
+        query = delete(self._model).where(cast(ColumnElement, self._model.id == id))
         result = await self._session.execute(query)
         return cast(int, result.rowcount) > 0
 

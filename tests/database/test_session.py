@@ -16,10 +16,10 @@ async def test_relationships(database: Database, soon: datetime) -> None:
         assert id is not None
     async with database as client:
         async with client.transaction():
-            session: models.Session = await client.sessions.fetch(id)
+            session: models.Session = await client.sessions.fetch_by_id(id)
             assert session is not None
             assert session.user is not None
             await client.users.delete_by_id(session.user.id)
         async with client.transaction():
-            session = await client.sessions.fetch(id)
+            session = await client.sessions.fetch_by_id(id)
             assert session is None

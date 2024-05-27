@@ -17,14 +17,12 @@ class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
 
     @staticmethod
     @abstractmethod
-    def _not_authorized(url: URL) -> NotAuthorizedException:
-        ...
+    def _not_authorized(url: URL) -> NotAuthorizedException: ...
 
     @abstractmethod
     async def authenticate_request(
         self, connection: ASGIConnection
-    ) -> AuthenticationResult:
-        ...
+    ) -> AuthenticationResult: ...
 
 
 class BasicAuthentication(AbstractAuthentication):
@@ -82,7 +80,7 @@ class JwtAuthentication(AbstractAuthentication):
             raise self._not_authorized(connection.url) from error
         async with Database() as client:
             async with client.transaction():
-                session = await client.sessions.fetch(token.session)
+                session = await client.sessions.fetch_by_id(token.session)
         if not session:
             raise self._not_authorized(connection.url)
         if session.expire < datetime.now():

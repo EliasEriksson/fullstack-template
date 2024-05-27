@@ -13,12 +13,12 @@ async def test_relationship(database: Database) -> None:
         assert password_id is not None
     async with database as client:
         async with client.transaction():
-            password = await client.passwords.fetch(password_id)
+            password = await client.passwords.fetch_by_id(password_id)
             assert password is not None
             assert password.user is not None
             await client.users.delete_by_id(password.user.id)
         async with client.transaction():
-            password = await client.passwords.fetch(password_id)
+            password = await client.passwords.fetch_by_id(password_id)
             assert password is None
 
 

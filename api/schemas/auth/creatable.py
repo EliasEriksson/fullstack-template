@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import *
 from ..model import Model
 from database import models
-from datetime import datetime
-from datetime import timedelta
 
 
 class CreatableProtocol(Protocol):

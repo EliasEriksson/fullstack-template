@@ -1,5 +1,7 @@
 from __future__ import annotations
+from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy import select
 from database.operations.crud import CRUD
 from .. import models
@@ -17,9 +19,9 @@ class Sessions(CRUD[models.Session]):
         query = (
             select(models.Session)
             .join(models.Session.user)
-            .where(models.User.id == user.id)
-            .where(models.Session.host == host)
-            .where(models.Session.agent == agent)
+            .where(cast(ColumnElement, models.User.id == user.id))
+            .where(cast(ColumnElement, models.Session.host == host))
+            .where(cast(ColumnElement, models.Session.agent == agent))
         )
         result = await self._session.execute(query)
         return result.scalars().one_or_none()
