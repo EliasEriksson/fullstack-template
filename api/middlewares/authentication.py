@@ -1,6 +1,8 @@
 from __future__ import annotations
+from typing import *
 from abc import ABC, abstractmethod
 import re
+import math
 from base64 import b64decode
 from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
@@ -8,8 +10,10 @@ from litestar.connection import ASGIConnection
 from litestar.middleware import AuthenticationResult
 from litestar.middleware import AbstractAuthenticationMiddleware
 from database import Database
+from database import models
 from api import schemas
 from datetime import datetime
+from datetime import timedelta
 
 
 class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
@@ -61,8 +65,44 @@ class BasicAuthentication(AbstractAuthentication):
         )
 
 
-class JwtAuthentication(AbstractAuthentication):
-    _authorizationPattern = re.compile(r"^Bearer\s((?:ey\w+\.){2}\w+)$")
+class OtacTokenAuthentication(AbstractAuthentication):
+    _pattern = re.compile(
+        rf"Bearer\s([\w\-+/=]{'{'}{math.ceil(models.Code.size * 4 / 3)}{'}'})", re.ASCII
+    )
+
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        print("Otac token authentication")
+        authorization = connection.headers.get(self.header)
+        if not authorization:
+            raise self._not_authorized(connection.url)
+        print("authorization", authorization)
+        if not (match := self._pattern.match(authorization)):
+            raise self._not_authorized(connection.url)
+        print("match", match)
+        if not (token := match.group(1)):
+            raise self._not_authorized(connection.url)
+        print("token", token)
+        async with Database() as client:
+            async with client.transaction():
+                code = await client.codes.fetch_by_token(token)
+        print("code", code)
+        if not code:
+            raise self._not_authorized(connection.url)
+        return AuthenticationResult(user=code.email.user, auth=code)
+
+    @staticmethod
+    def _not_authorized(url: URL) -> NotAuthorizedException:
+        return NotAuthorizedException(
+            headers={f"WWW-Authenticate": f'Bearer realm="{url.hostname}"'},
+        )
+
+
+class JwtTokenAuthentication(AbstractAuthentication):
+    _pattern = re.compile(
+        r"^Bearer\s((?:ey\w+\.){2}\w+)$",
+    )
 
     async def authenticate_request(
         self, connection: ASGIConnection
@@ -70,7 +110,7 @@ class JwtAuthentication(AbstractAuthentication):
         authorization = connection.headers.get(self.header)
         if not authorization:
             raise self._not_authorized(connection.url)
-        if not (match := self._authorizationPattern.match(authorization)):
+        if not (match := self._pattern.match(authorization)):
             raise self._not_authorized(connection.url)
         if not (jwt := match.group(1)):
             raise self._not_authorized(connection.url)

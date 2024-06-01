@@ -6,9 +6,9 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy import LargeBinary
 from sqlalchemy import ForeignKey
-from database.models.base import Base
 from bcrypt import checkpw
 from shared import hash
+from .base import Base
 from ..constants import Lazy
 from ..constants import Cascades
 from ..constants import CASCADE

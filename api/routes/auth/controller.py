@@ -17,11 +17,11 @@ from database import Database
 from sqlalchemy.exc import IntegrityError
 from ... import schemas
 from ...middlewares.authentication import BasicAuthentication
-from ...middlewares.authentication import JwtAuthentication
+from ...middlewares.authentication import JwtTokenAuthentication
 from services.email import Email
 
 
-bearer = DefineMiddleware(JwtAuthentication)
+bearer = DefineMiddleware(JwtTokenAuthentication)
 basic = DefineMiddleware(BasicAuthentication)
 
 
@@ -36,52 +36,79 @@ class Controller(LitestarController):
         return
 
     @post(
-        path="/",
-        tags=["user"],
-        summary="Register user.",
+        "/",
+        tags=["auth"],
+        summary="Self registration.",
     )
     async def create(
         self,
+        request: Request,
         data: schemas.auth.Creatable,
     ) -> None:
         async with Database() as client:
             try:
                 async with client.transaction():
-                    created = await client.users.create(data.create())
+                    user, email, code = data.create()
+                    await client.users.create(user)
             except IntegrityError as error:
                 raise ClientException("Email already in use.") from error
         mailer = Email()
-        await asyncio.gather(
-            *[
-                asyncio.create_task(
-                    mailer.send_text(f"Verification: {email.verification}")
-                )
-                for email in created.emails
-            ]
+        asyncio.ensure_future(
+            mailer.send_text(
+                email.address,
+                f"{request.url.hostname} email verification.",
+                f"Your OTAC: {email.code.token}",
+            )
         )
+        return None
 
-    @patch(
-        path="/{verification:uuid}",
-        tags=["user"],
-        summary="Complete registration of new user.",
-    )
-    async def patch(
-        self,
-        verification: UUID,
-        data: schemas.auth.Patchable,
-    ) -> None:
-        async with Database() as client:
-            try:
-                async with client.transaction():
-                    email = await client.emails.fetch_by_verification(verification)
-                    if not email:
-                        raise ClientException(
-                            f"Verification {verification} does not exist."
-                        )
-                    email.verified = True
-                    data.patch(email.user)
-            except IntegrityError as error:
-                raise ClientException() from error
+    # @post(
+    #     path="/",
+    #     tags=["user"],
+    #     summary="Register user.",
+    # )
+    # async def create(
+    #     self,
+    #     data: schemas.auth.Creatable,
+    # ) -> None:
+    #     async with Database() as client:
+    #         try:
+    #             async with client.transaction():
+    #                 created = await client.users.create(data.create())
+    #         except IntegrityError as error:
+    #             raise ClientException("Email already in use.") from error
+    #     mailer = Email()
+    #     await asyncio.gather(
+    #         *[
+    #             asyncio.create_task(
+    #                 mailer.send_text(f"Verification: {email.verification}")
+    #             )
+    #             for email in created.emails
+    #         ]
+    #     )
+
+    # @patch(
+    #     path="/{verification:uuid}",
+    #     tags=["user"],
+    #     summary="Complete registration of new user.",
+    # )
+    # async def patch(
+    #     self,
+    #     verification: UUID,
+    #     data: schemas.auth.Patchable,
+    # ) -> None:
+    #     async with Database() as client:
+    #         try:
+    #             async with client.transaction():
+    #                 email = await client.emails.fetch_by_verification(verification)
+    #                 if not email:
+    #                     raise ClientException(
+    #                         f"Verification {verification} does not exist."
+    #                     )
+    #                 email.verified = True
+    #                 data.patch(email.user)
+    #         except IntegrityError as error:
+    #             raise ClientException() from error
 
     # @get(
     #     path="/",

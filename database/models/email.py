@@ -17,6 +17,7 @@ from ..constants import gen_random_uuid
 
 if TYPE_CHECKING:
     from .user import User
+    from .code import Code
 
 
 class Email(Base):
@@ -31,11 +32,6 @@ class Email(Base):
         server_default=false(),
         nullable=False,
     )
-    verification: Mapped[UUID] = mapped_column(
-        Uuid(as_uuid=True, native_uuid=True),
-        server_default=gen_random_uuid,
-        nullable=False,
-    )
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("user.id", ondelete=CASCADE),
         nullable=False,
@@ -43,5 +39,10 @@ class Email(Base):
     user: Mapped[User] = relationship(
         back_populates="emails",
         cascade=Cascades.default(),
+        lazy=Lazy.default(),
+    )
+    code: Mapped[Code | None] = relationship(
+        back_populates="email",
+        cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),
     )

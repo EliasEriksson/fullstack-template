@@ -11,10 +11,13 @@ class CreatableProtocol(Protocol):
 class Creatable(Model):
     email: str
 
-    def create(self) -> models.User:
+    def create(self) -> tuple[models.User, models.Email, models.Code]:
         user = models.User()
-        models.Email(
+        email = models.Email(
             address=self.email,
             user=user,
         )
-        return user
+        code = models.Code(
+            email=email,
+        )
+        return user, email, code

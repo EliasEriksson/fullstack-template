@@ -11,12 +11,10 @@ class Email(ABC):
 
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
-        ...
+    def name(cls) -> str: ...
 
     @abstractmethod
-    async def send_text(self, text: str) -> None:
-        ...
+    async def send_text(self, recipient: str, subject: str, text: str) -> None: ...
 
     def __init_subclass__(cls) -> None:
         cls._registry.update({cls.name(): cls})

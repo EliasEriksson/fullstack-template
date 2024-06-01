@@ -1,11 +1,12 @@
 from litestar import Router
 from litestar.middleware.base import DefineMiddleware
-from . import refresh
-from ....middlewares.authentication import JwtAuthentication
+from . import email
+from . import password
+from ....middlewares.authentication import JwtTokenAuthentication
 from ..controller import Controller
 
 router = Router(
     path=Controller.path,
-    route_handlers=[refresh.router],
-    middleware=[DefineMiddleware(JwtAuthentication)],
+    route_handlers=[email.router, password.router],
+    middleware=[],
 )

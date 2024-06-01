@@ -4,6 +4,7 @@ from .operations import Users
 from .operations import Passwords
 from .operations import Emails
 from .operations import Sessions
+from .operations import Codes
 
 
 class Client:
@@ -12,13 +13,15 @@ class Client:
     emails: Emails
     passwords: Passwords
     sessions: Sessions
+    codes: Codes
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-        self.users = Users(self._session)
-        self.emails = Emails(self._session)
-        self.passwords = Passwords(self._session)
-        self.sessions = Sessions(self._session)
+        self.users = Users(session)
+        self.emails = Emails(session)
+        self.passwords = Passwords(session)
+        self.sessions = Sessions(session)
+        self.codes = Codes(session)
 
     def transaction(self) -> AsyncSessionTransaction:
         return self._session.begin()
