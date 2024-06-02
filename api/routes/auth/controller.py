@@ -14,6 +14,7 @@ from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
 from litestar.exceptions import InternalServerException
 from database import Database
+from database import models
 from sqlalchemy.exc import IntegrityError
 from ... import schemas
 from ...middlewares.authentication import PasswordAuthentication
@@ -29,13 +30,6 @@ any = DefineMiddleware(AnyAuthentication)
 
 class Controller(LitestarController):
     path = "/auth"
-
-    @get(path="/test")
-    async def test(
-        self,
-        agent: Annotated[str, Parameter(header="User-Agent")],
-    ) -> None:
-        return
 
     @post(
         "/",
@@ -70,105 +64,18 @@ class Controller(LitestarController):
         summary="Login.",
         middleware=[any],
     )
-    async def fetch(self) -> None:
+    async def fetch(
+        self,
+        request: Request[
+            models.User, schemas.Token | models.Password | models.Code, Any
+        ],
+    ) -> None:
+        if isinstance(request.auth, schemas.Token):
+            print("authenticated with JWT")
+        elif isinstance(request.auth, models.Password):
+            print("authenticated with password")
+        elif isinstance(request.auth, models.Code):
+            print("authenticated with OTAC")
+        else:
+            raise AnyAuthentication.not_authorized(request.url)
         return None
-
-    # @post(
-    #     path="/",
-    #     tags=["user"],
-    #     summary="Register user.",
-    # )
-    # async def create(
-    #     self,
-    #     data: schemas.auth.Creatable,
-    # ) -> None:
-    #     async with Database() as client:
-    #         try:
-    #             async with client.transaction():
-    #                 created = await client.users.create(data.create())
-    #         except IntegrityError as error:
-    #             raise ClientException("Email already in use.") from error
-    #     mailer = Email()
-    #     await asyncio.gather(
-    #         *[
-    #             asyncio.create_task(
-    #                 mailer.send_text(f"Verification: {email.verification}")
-    #             )
-    #             for email in created.emails
-    #         ]
-    #     )
-
-    # @patch(
-    #     path="/{verification:uuid}",
-    #     tags=["user"],
-    #     summary="Complete registration of new user.",
-    # )
-    # async def patch(
-    #     self,
-    #     verification: UUID,
-    #     data: schemas.auth.Patchable,
-    # ) -> None:
-    #     async with Database() as client:
-    #         try:
-    #             async with client.transaction():
-    #                 email = await client.emails.fetch_by_verification(verification)
-    #                 if not email:
-    #                     raise ClientException(
-    #                         f"Verification {verification} does not exist."
-    #                     )
-    #                 email.verified = True
-    #                 data.patch(email.user)
-    #         except IntegrityError as error:
-    #             raise ClientException() from error
-
-    # @get(
-    #     path="/",
-    #     tags=["authentication"],
-    #     summary="Authenticate user",
-    #     middleware=[basic],
-    # )
-    # async def fetch(
-    #     self,
-    #     request: Request[models.User, None, Any],
-    # ) -> Response[schemas.Resource[str]]:
-    #     result = Token.from_user(
-    #         request.user, request.base_url, request.base_url
-    #     ).encode()
-    #     return Response(
-    #         Resource(result),
-    #     )
-
-    # @patch(
-    #     path="/",
-    #     middleware=[bearer],
-    # )
-    # async def patch(
-    #     self,
-    #     request: Request[models.User, Token, Any],
-    #     data: Patchable,
-    # ) -> Response[Resource[str]]:
-    #     if data.password:
-    #         if data.password.password != data.password.repeat:
-    #             raise ClientException("Repeated password not equal to new password.")
-    #         if not request.user.verify(data.password.old):
-    #             raise ClientException("Password missmatch.")
-    #     async with Database() as client:
-    #         async with client.transaction():
-    #             patched = await client.users.patch(request.user.patch(data))
-    #     result = Token.from_user(patched, request.base_url, request.base_url).encode()
-    #     return Response(
-    #         Resource(result),
-    #     )
-
-    # @delete(
-    #     path="/",
-    #     middleware=[bearer],
-    # )
-    # async def delete(
-    #     self,
-    #     request: Request[models.User, Token, Any],
-    # ) -> None:
-    #     async with Database() as client:
-    #         async with client.transaction():
-    #             await client.users.delete(request.user)
-    #     return

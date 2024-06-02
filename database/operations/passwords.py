@@ -23,7 +23,8 @@ class Passwords(CRUD[models.Password]):
                     models.Password.user_id
                     == select(models.User.id)
                     .join(models.User.emails)
-                    .where(cast(ColumnElement, models.Email.address == email)),
+                    .where(cast(ColumnElement, models.Email.address == email))
+                    .scalar_subquery(),
                 )
             )
         )
