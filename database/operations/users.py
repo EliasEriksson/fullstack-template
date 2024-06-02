@@ -15,7 +15,7 @@ class Users(CRUD[models.User]):
 
     async def fetch_by_email(self, email: str) -> models.User | None:
         query = (
-            select(models.User, models.Email)
+            select(models.User)
             .join(models.User.emails)
             .where(cast(ColumnElement, models.Email.address == email))
         )

@@ -95,8 +95,10 @@ class OtacTokenAuthentication(AbstractAuthentication):
         async with Database() as client:
             async with client.transaction():
                 code = await client.codes.fetch_by_token(token)
-        if not code:
-            raise cls.not_authorized(connection.url)
+            if not code:
+                raise cls.not_authorized(connection.url)
+            async with client.transaction():
+                await client.passwords.invalidate_by_email(code.email.address)
         return AuthenticationResult(user=code.email.user, auth=code)
 
     @staticmethod

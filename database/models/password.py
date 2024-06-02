@@ -5,6 +5,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy import LargeBinary
+from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from bcrypt import checkpw
 from shared import hash
@@ -21,6 +22,11 @@ class Password(Base):
     __tablename__ = "password"
     digest: Mapped[bytes] = mapped_column(
         LargeBinary(),
+        nullable=False,
+    )
+    valid: Mapped[bool] = mapped_column(
+        Boolean(),
+        default=True,
         nullable=False,
     )
     user_id: Mapped[UUID] = mapped_column(
