@@ -15,16 +15,20 @@ from litestar.datastructures.url import URL
 from uuid import UUID
 from sqlalchemy.orm import Mapped
 from ..model import Model
-from database import models
 
 
-class User(Protocol):
+class PasswordProtocol(Protocol):
+    pass
+
+
+class UserProtocol(Protocol):
     id: UUID
+    passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
 
 
-class Session(Protocol):
+class SessionProtocol(Protocol):
     id: UUID
-    user: User | Mapped[User]
+    user: UserProtocol | Mapped[UserProtocol]
 
 
 class TokenProtocol(Protocol):
@@ -32,6 +36,7 @@ class TokenProtocol(Protocol):
     issuer: str
     subject: UUID
     session: UUID
+    secure: bool
     issued: datetime
     expires: datetime
 
@@ -41,6 +46,7 @@ class Token(Model):
     issuer: str
     subject: UUID
     session: UUID
+    secure: bool
     issued: datetime
     expires: datetime
 
@@ -66,6 +72,7 @@ class Token(Model):
             Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
             Claims.session: str(self.session),
+            Claims.secure: self.secure,
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }
@@ -88,6 +95,7 @@ class Token(Model):
                 issuer=token[Claims.issuer],
                 subject=UUID(token[Claims.subject]),
                 session=UUID(token[Claims.session]),
+                secure=token[Claims.secure],
                 expires=datetime.fromtimestamp(token[Claims.expires]),
                 issued=datetime.fromtimestamp(token[Claims.issued]),
             )
@@ -109,7 +117,7 @@ class Token(Model):
 
     @classmethod
     def from_session(
-        cls, session: Session | models.Session, audience: str | URL, issuer: str | URL
+        cls, session: SessionProtocol, audience: str | URL, issuer: str | URL
     ) -> Token:
         now = cls._now()
         return cls(
@@ -117,6 +125,7 @@ class Token(Model):
             audience=str(audience),
             subject=session.user.id,
             session=session.id,
+            secure=len(session.user.passwords) > 0,
             issued=now,
             expires=cls._expires(now),
         )

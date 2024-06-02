@@ -16,13 +16,15 @@ from litestar.exceptions import InternalServerException
 from database import Database
 from sqlalchemy.exc import IntegrityError
 from ... import schemas
-from ...middlewares.authentication import BasicAuthentication
+from ...middlewares.authentication import PasswordAuthentication
 from ...middlewares.authentication import JwtTokenAuthentication
+from ...middlewares.authentication import AnyAuthentication
 from services.email import Email
 
 
-bearer = DefineMiddleware(JwtTokenAuthentication)
-basic = DefineMiddleware(BasicAuthentication)
+jwt = DefineMiddleware(JwtTokenAuthentication)
+password = DefineMiddleware(PasswordAuthentication)
+any = DefineMiddleware(AnyAuthentication)
 
 
 class Controller(LitestarController):
@@ -60,6 +62,15 @@ class Controller(LitestarController):
                 f"Your OTAC: {email.code.token}",
             )
         )
+        return None
+
+    @get(
+        path="/",
+        tags=["auth"],
+        summary="Login.",
+        middleware=[any],
+    )
+    async def fetch(self) -> None:
         return None
 
     # @post(

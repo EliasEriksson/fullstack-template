@@ -9,17 +9,25 @@ jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
 
 class Session:
     class User:
-        id: UUID
+        class Password:
+            digest: str
 
-        def __init__(self) -> None:
+            def __init__(self, digest: str) -> None:
+                self.digest = digest
+
+        id: UUID
+        passwords: list[Password]
+
+        def __init__(self, passwords: list[str]) -> None:
             self.id = uuid4()
+            self.passwords = [Session.User.Password(password) for password in passwords]
 
     id: UUID
     user: User
 
-    def __init__(self) -> None:
+    def __init__(self, passwords: list[str]) -> None:
         self.id = uuid4()
-        self.user = self.User()
+        self.user = self.User(passwords)
 
 
 class Token:
@@ -27,6 +35,7 @@ class Token:
     issuer: str
     subject: UUID
     session: UUID
+    secure: bool
     issued: datetime
     expires: datetime
 
@@ -37,6 +46,7 @@ class Token:
         self.issuer = issuer
         self.subject = uuid4()
         self.session = uuid4()
+        self.secure = True
         self.issued = issued
         self.expires = expires
 
@@ -75,14 +85,14 @@ async def test_from_object(
 
 async def test_from_user(audience: str, issuer: str) -> None:
     assert isinstance(
-        schemas.Token.from_session(Session(), audience, issuer), schemas.Token
+        schemas.Token.from_session(Session(["asd"]), audience, issuer), schemas.Token
     )
 
 
 async def test_refresh(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-    token = schemas.Token.from_session(Session(), audience, issuer)
+    token = schemas.Token.from_session(Session(["qwe"]), audience, issuer)
     issued = token.issued
     expires = token.expires
     duration = timedelta(minutes=30)

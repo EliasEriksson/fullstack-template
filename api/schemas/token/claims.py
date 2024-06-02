@@ -9,3 +9,4 @@ class Claims:
     session = "sid"
     issued = "iat"
     expires = "exp"
+    secure = "sec"
