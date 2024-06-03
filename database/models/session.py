@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import *
 from uuid import UUID
 from datetime import datetime
+from datetime import timedelta
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -23,6 +24,7 @@ class Session(Base):
     __table_args__ = tuple(UniqueConstraint("user_id", "agent", "host"))
     expire: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        default=lambda: datetime.now() + timedelta(days=30),
         nullable=False,
     )
     host: Mapped[str] = mapped_column(
@@ -42,3 +44,7 @@ class Session(Base):
         cascade=Cascades.default(),
         lazy=Lazy.default(),
     )
+
+    def refresh(self) -> Self:
+        self.expire = cast(Mapped[datetime], datetime.now() + timedelta(days=30))
+        return self

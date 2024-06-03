@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import *
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, select
 from sqlalchemy.sql.expression import ColumnElement

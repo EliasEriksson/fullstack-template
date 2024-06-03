@@ -16,8 +16,9 @@ from database import models
 from uuid import UUID
 from ...exceptions import ForbiddenException
 from ...exceptions import PreconditionFailedException
-from ...schemas import Resource
-from ...schemas import PagedResource
+
+# from ...schemas import Resource
+from ...schemas import Paged
 from ...schemas.user import User
 from ...schemas.user import Creatable
 from ...schemas.user import Patchable

@@ -21,7 +21,19 @@ class Controller(LitestarController):
     )
     async def fetch(
         self, request: Request[models.User, models.Code, Any]
-    ) -> Response[schemas.Resource[schemas.email.Email]]:
+    ) -> Response[schemas.resource.Otac[schemas.email.Email]]:
+        print("7")
+        async with Database() as client:
+            async with client.transaction():
+                print("8")
+                email = await client.emails.fetch_by_code(request.auth.token)
+                print("9", email)
+                code = await client.codes.create(models.Code(email=email))
+                print("10", code)
+            print("11")
         return Response(
-            schemas.Resource(schemas.email.Email.from_protocol(request.auth.email))
+            schemas.resource.Otac(
+                schemas.email.Email.from_object(email),
+                code.token,
+            )
         )

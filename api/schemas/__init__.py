@@ -8,5 +8,6 @@ from . import auth
 from . import email
 from .email import Email
 from .base import Base, BaseProtocol
-from .paged_resource import PagedResource
 from .resource import Resource
+from . import resource
+from api.schemas.resource.paged import Paged

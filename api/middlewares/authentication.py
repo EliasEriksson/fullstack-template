@@ -14,22 +14,25 @@ from database import Database
 from database import models
 from api import schemas
 from datetime import datetime
+from api.headers import Headers
 
 
 class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
-    authorization = "Authorization"
-    www = "WWW-Authenticate"
-
     @classmethod
     def not_authorized(cls, url: URL) -> NotAuthorizedException:
         return NotAuthorizedException(
-            headers={cls.www: ", ".join(challenge for challenge in cls.challenges(url))}
+            headers={
+                Headers.www_authenticate: ", ".join(
+                    challenge for challenge in cls.challenges(url)
+                ),
+                Headers.content_type: "application/json; charset=utf-8",
+            },
         )
 
     async def authenticate_request(
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
-        authorization = connection.headers.get(self.authorization)
+        authorization = connection.headers.get(Headers.authorization)
         if not authorization:
             raise self.not_authorized(connection.url)
         return await self.authenticate(connection, authorization)
@@ -98,7 +101,9 @@ class OtacTokenAuthentication(AbstractAuthentication):
             if not code:
                 raise cls.not_authorized(connection.url)
             async with client.transaction():
+                code.email.verified = True
                 await client.passwords.invalidate_by_email(code.email.address)
+                await client.codes.delete_by_user_id(code.email.user.id)
         return AuthenticationResult(user=code.email.user, auth=code)
 
     @staticmethod

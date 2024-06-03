@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-from .model import Model
+from api.schemas.model import Model
 from dataclasses import dataclass
 from math import ceil
 
@@ -23,14 +23,17 @@ class Page:
         self.previous = min(current - 1, self.last) if current != 0 else None
 
 
-class PageResourceProtocol(Protocol[T]):
+class PageProtocol(Protocol[T]):
     result: list[T]
     page: Page
 
 
-class PagedResource(Model, Generic[T]):
+class Paged(Model, Generic[T]):
     result: list[T]
     page: Page
 
     def __init__(self, resources: list[T], page: Page) -> None:
         super().__init__(result=resources, page=page)
+
+    def model_dump(self, **kwargs) -> dict[str, Any]:
+        return super().model_dump(**kwargs, exclude_none=True)
