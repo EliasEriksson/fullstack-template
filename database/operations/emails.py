@@ -14,6 +14,13 @@ class Emails(CRUD[models.Email]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, models.Email)
 
+    async def fetch_by_address(self, address: str) -> models.Email | None:
+        query = select(models.Email).where(
+            cast(ColumnElement, models.Email.address == address)
+        )
+        result = await self._session.execute(query)
+        return result.scalars().one_or_none()
+
     async def fetch_by_code(self, code: str) -> models.Email | None:
         query = (
             select(models.Email)

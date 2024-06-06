@@ -4,8 +4,8 @@ from .. import base
 
 
 class UserProtocol(base.BaseProtocol, Protocol):
-    email: str
+    emails: list[str]
 
 
 class User(base.Base):
-    email: str
+    emails: list[str]

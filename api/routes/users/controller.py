@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import *
+from uuid import UUID
 from litestar import Controller as LitestarController
+from litestar.middleware import DefineMiddleware
 from litestar import get
 from litestar import post
 from litestar import patch
@@ -13,23 +15,25 @@ from litestar.exceptions import NotFoundException
 from litestar.exceptions import ClientException
 from database import Database
 from database import models
-from uuid import UUID
-from ...exceptions import ForbiddenException
-from ...exceptions import PreconditionFailedException
-
-# from ...schemas import Resource
-from ...schemas import Paged
-from ...schemas.user import User
-from ...schemas.user import Creatable
-from ...schemas.user import Patchable
-from ...schemas.token import Token
-from shared import hash
+from api import schemas
+from api.exceptions import ForbiddenException
 
 
-#
-#
 class Controller(LitestarController):
     path = "/users"
+
+    @get(
+        "/{id:uuid}",
+        tags=["user"],
+    )
+    async def fetch(
+        self,
+        request: Request[models.User, schemas.Token, Any],
+        id: UUID,
+    ) -> Response[schemas.Resource[schemas.User]]:
+        if not request.auth.secure and request.user.id != id:
+            raise ForbiddenException()
+        return Response(schemas.Resource(schemas.User.from_object(request.user)))
 
 
 #

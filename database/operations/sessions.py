@@ -25,3 +25,19 @@ class Sessions(CRUD[models.Session]):
         )
         result = await self._session.execute(query)
         return result.scalars().one_or_none()
+
+    async def create(self, model: models.Session, refresh=False) -> models.Session:
+        query = (
+            select(models.Session)
+            .where(cast(ColumnElement, models.Session.host == model.host))
+            .where(cast(ColumnElement, models.Session.agent == model.agent))
+        )
+        result = await self._session.execute(query)
+        session = result.scalars().one_or_none()
+        if not session:
+            return await super().create(model)
+        model.id = session.id
+        merged = await self._session.merge(model)
+        if refresh:
+            merged.refresh()
+        return merged

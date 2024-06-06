@@ -11,23 +11,26 @@ from jose import jwt
 from jose.exceptions import JWSError
 from jose.exceptions import JWKError
 from jose.exceptions import ExpiredSignatureError
+from jose.exceptions import JWTClaimsError
 from litestar.datastructures.url import URL
 from uuid import UUID
 from sqlalchemy.orm import Mapped
 from ..model import Model
 
 
-class PasswordProtocol(Protocol):
+class Resource(Protocol):
+    id: UUID
+
+
+class PasswordProtocol(Resource, Protocol):
     pass
 
 
-class UserProtocol(Protocol):
-    id: UUID
+class UserProtocol(Resource, Protocol):
     passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
 
 
-class SessionProtocol(Protocol):
-    id: UUID
+class SessionProtocol(Resource, Protocol):
     user: UserProtocol | Mapped[UserProtocol]
 
 
@@ -36,6 +39,7 @@ class TokenProtocol(Protocol):
     issuer: str
     subject: UUID
     session: UUID
+    email: UUID
     secure: bool
     issued: datetime
     expires: datetime
@@ -45,6 +49,7 @@ class Token(Model):
     audience: str
     issuer: str
     subject: UUID
+    email: UUID
     session: UUID
     secure: bool
     issued: datetime
@@ -72,6 +77,7 @@ class Token(Model):
             Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
             Claims.session: str(self.session),
+            Claims.email: str(self.email),
             Claims.secure: self.secure,
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
@@ -95,6 +101,7 @@ class Token(Model):
                 issuer=token[Claims.issuer],
                 subject=UUID(token[Claims.subject]),
                 session=UUID(token[Claims.session]),
+                email=UUID(token[Claims.email]),
                 secure=token[Claims.secure],
                 expires=datetime.fromtimestamp(token[Claims.expires]),
                 issued=datetime.fromtimestamp(token[Claims.issued]),
@@ -112,12 +119,16 @@ class Token(Model):
                     audience=str(audience),
                 )
             )
-        except (JWKError, ExpiredSignatureError) as error:
+        except (JWKError, ExpiredSignatureError, JWTClaimsError) as error:
             raise TokenDecodeException() from error
 
     @classmethod
     def from_session(
-        cls, session: SessionProtocol, audience: str | URL, issuer: str | URL
+        cls,
+        session: SessionProtocol,
+        email: UUID,
+        audience: str | URL,
+        issuer: str | URL,
     ) -> Token:
         now = cls._now()
         return cls(
@@ -125,6 +136,7 @@ class Token(Model):
             audience=str(audience),
             subject=session.user.id,
             session=session.id,
+            email=email,
             secure=len(session.user.passwords) > 0,
             issued=now,
             expires=cls._expires(now),

@@ -1,37 +1,43 @@
 from __future__ import annotations
 from typing import *
 import asyncio
-from uuid import UUID
-from datetime import timedelta
 from litestar import Controller as LitestarController
-from litestar.connection import ASGIConnection
 from litestar import post
 from litestar import get
-from litestar import patch
 from litestar import Response
 from litestar import Request
 from litestar.params import Parameter
 from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
-from litestar.exceptions import InternalServerException
+from litestar.exceptions import NotAuthorizedException
 from database import Database
 from database import models
 from sqlalchemy.exc import IntegrityError
 from ... import schemas
-from ...middlewares.authentication import PasswordAuthentication
-from ...middlewares.authentication import JwtTokenAuthentication
-from ...middlewares.authentication import AnyAuthentication
+from api.middlewares.authentication import Authentication
+from api.middlewares.authentication import PasswordAuthentication
+from api.middlewares.authentication import OtacAuthentication
+from api.middlewares.authentication import JwtAuthentication
 from api.headers import Headers
 from services.email import Email
 
-
-jwt = DefineMiddleware(JwtTokenAuthentication)
-password = DefineMiddleware(PasswordAuthentication)
-any = DefineMiddleware(AnyAuthentication)
+authentication = DefineMiddleware(
+    Authentication,
+    JwtAuthentication(secure=False),
+    PasswordAuthentication(),
+    OtacAuthentication(),
+)
 
 
 class Controller(LitestarController):
     path = "/auth"
+
+    @get(
+        "/test",
+        middleware=[authentication],
+    )
+    async def test(self) -> None:
+        return None
 
     @post(
         "/",
@@ -64,7 +70,7 @@ class Controller(LitestarController):
         path="/",
         tags=["auth"],
         summary="Login.",
-        middleware=[any],
+        middleware=[authentication],
     )
     async def fetch(
         self,
@@ -77,32 +83,28 @@ class Controller(LitestarController):
             if isinstance(request.auth, schemas.Token):
                 async with client.transaction():
                     session = await client.sessions.fetch_by_id(request.auth.session)
-                if session.host == request.client.host and session.agent == agent:
-                    async with client.transaction():
-                        session.refresh()
-                else:
-                    session = await client.sessions.create(
-                        models.Session(
-                            host=request.client.host, agent=agent, user=request.user
-                        )
-                    )
-                result = schemas.Token.from_session(
-                    session, request.url, request.url
-                ).encode()
-                print("authenticated with JWT")
-            elif isinstance(request.auth, models.Password):
-                print("authenticated with password")
-                result = ""
-            elif isinstance(request.auth, models.Code):
+                    email = request.auth.email
+            elif isinstance(request.auth, (models.Email, models.Code)):
                 async with client.transaction():
                     session = await client.sessions.create(
                         models.Session(
                             host=request.client.host, agent=agent, user=request.user
-                        )
+                        ),
+                        refresh=True,
                     )
-                result = schemas.Token.from_session(
-                    session, request.url, request.url
-                ).encode()
+                    email = (
+                        request.auth.id
+                        if isinstance(request.auth, models.Email)
+                        else request.auth.email.id
+                    )
             else:
-                raise AnyAuthentication.not_authorized(request.url)
-        return Response(schemas.Resource(result))
+                # TODO: add www-authenticate header.
+                raise NotAuthorizedException()
+            result = schemas.Token.from_session(
+                session, email, request.url.hostname, request.url.hostname
+            )
+            return Response(
+                schemas.Resource(
+                    result.encode(),
+                )
+            )

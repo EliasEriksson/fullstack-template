@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import *
 from abc import ABC, abstractmethod
 import re
-from itertools import chain
 import math
+from datetime import datetime
+from datetime import timezone
 from base64 import b64decode
 from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
@@ -12,157 +13,166 @@ from litestar.middleware import AuthenticationResult
 from litestar.middleware import AbstractAuthenticationMiddleware
 from database import Database
 from database import models
+from api.exceptions import ForbiddenException
 from api import schemas
-from datetime import datetime
 from api.headers import Headers
 
 
-class AbstractAuthentication(AbstractAuthenticationMiddleware, ABC):
+class Strategy(ABC):
+    def __init__(self, *args, **kwargs) -> None: ...
     @classmethod
-    def not_authorized(cls, url: URL) -> NotAuthorizedException:
+    @abstractmethod
+    def processable(cls, authorization: str) -> bool: ...
+
+    @classmethod
+    @abstractmethod
+    def scheme(cls) -> str: ...
+
+    @abstractmethod
+    async def authenticate_request(
+        self, connection: ASGIConnection, authorization: str
+    ) -> AuthenticationResult: ...
+
+
+class Authentication(AbstractAuthenticationMiddleware):
+    strategies: list[Strategy]
+
+    def __init__(self, *strategies: list[Strategy], **kwargs) -> None:
+        self.strategies = strategies or []
+        super().__init__(**kwargs)
+
+    def not_authorized(self, url: URL) -> NotAuthorizedException:
         return NotAuthorizedException(
             headers={
-                Headers.www_authenticate: ", ".join(
-                    challenge for challenge in cls.challenges(url)
-                ),
+                Headers.www_authenticate: "; ".join(
+                    f"{scheme} realm={url}"
+                    for scheme in {strategy.scheme() for strategy in self.strategies}
+                )
+                + "; charset=utf-8",
                 Headers.content_type: "application/json; charset=utf-8",
-            },
+            }
         )
 
     async def authenticate_request(
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
         authorization = connection.headers.get(Headers.authorization)
-        if not authorization:
-            raise self.not_authorized(connection.url)
-        return await self.authenticate(connection, authorization)
+        for strategy in self.strategies:
+            if strategy.processable(authorization):
+                try:
+                    return await strategy.authenticate_request(
+                        connection, authorization
+                    )
+                except NotAuthorizedException as error:
+                    raise self.not_authorized(connection.url) from error
+        raise self.not_authorized(connection.url)
+
+
+class JwtAuthentication(Strategy):
+    authorization = re.compile(r"^Bearer\s((?:ey[\w+=/-]+\.){2}[\w+=/-]+)$")
+    secure: bool
+
+    def __init__(self, secure: bool = True, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.secure = secure
 
     @classmethod
-    @abstractmethod
-    async def authenticate(
-        cls,
-        connection: ASGIConnection,
-        authorization: str,
-    ) -> AuthenticationResult: ...
-
-    @staticmethod
-    @abstractmethod
-    def challenges(url: URL) -> Iterable[str]: ...
-
-
-class PasswordAuthentication(AbstractAuthentication):
-    pattern = re.compile(r"^Basic\s(.*)$")
-    _credentialsPattern = re.compile(r"^([^:]+):?(.*)$")
+    def processable(cls, authorization: str) -> bool:
+        return cls.authorization.match(authorization) is not None
 
     @classmethod
-    async def authenticate(
-        cls, connection: ASGIConnection, authorization: str
+    def scheme(cls) -> str:
+        return "Token"
+
+    async def authenticate_request(
+        self, connection: ASGIConnection, authorization: str
     ) -> AuthenticationResult:
-        if not (match := cls.pattern.match(authorization)):
-            raise cls.not_authorized(connection.url)
-        if not (encodedCredentials := match.group(1)):
-            raise cls.not_authorized(connection.url)
-        credentials = b64decode(encodedCredentials).decode("utf-8")
-        if not (match := cls._credentialsPattern.match(credentials)):
-            raise cls.not_authorized(connection.url)
-        if not (email := match.group(1)) or not (password := match.group(2)):
-            raise cls.not_authorized(connection.url)
+        if not (match := self.authorization.match(authorization)):
+            raise NotAuthorizedException()
+        if not (jwt := match.group(1)):
+            raise NotAuthorizedException()
+        try:
+            token = schemas.token.Token.decode(jwt, connection.url.hostname)
+        except schemas.token.exceptions.TokenDecodeException as error:
+            raise NotAuthorizedException() from error
+        if self.secure and not token.secure:
+            raise ForbiddenException(
+                f"Your user might not have a password yet. Create a password, reauthenticate and try again."
+            )
         async with Database() as client:
             async with client.transaction():
-                user = await client.users.fetch_by_email(email)
-        if not user:
-            raise cls.not_authorized(connection.url)
-        for user_password in user.passwords:
-            if user_password.verify(password):
-                return AuthenticationResult(user=user, auth=None)
-        raise cls.not_authorized(connection.url)
-
-    @staticmethod
-    def challenges(url: URL) -> Iterable[str]:
-        return [f'Basic realm="{url.hostname}"']
+                session = await client.sessions.fetch_by_id(token.session)
+            if not session or session.expire < datetime.now(timezone.utc):
+                raise NotAuthorizedException()
+            agent = connection.headers.get(Headers.user_agent)
+            if session.host != connection.client.host or session.agent != agent:
+                raise NotAuthorizedException()
+            async with client.transaction():
+                session.refresh()
+        return AuthenticationResult(user=session.user, auth=token)
 
 
-class OtacTokenAuthentication(AbstractAuthentication):
-    pattern = re.compile(
+class PasswordAuthentication(Strategy):
+    authorization = re.compile(r"^Basic\s(.*)$")
+    credentials = re.compile(r"^([^:]+):?(.*)$")
+
+    @classmethod
+    def processable(cls, authorization: str) -> bool:
+        return cls.authorization.match(authorization) is not None
+
+    @classmethod
+    def scheme(cls) -> str:
+        return "Basic"
+
+    async def authenticate_request(
+        self, connection: ASGIConnection, authorization: str
+    ) -> AuthenticationResult:
+        if not (match := self.authorization.match(authorization)):
+            raise NotAuthorizedException()
+        if not (encodedCredentials := match.group(1)):
+            raise NotAuthorizedException()
+        credentials = b64decode(encodedCredentials).decode("utf-8")
+        if not (match := self.credentials.match(credentials)):
+            raise NotAuthorizedException()
+        if not (email := match.group(1)) or not (password := match.group(2)):
+            raise NotAuthorizedException()
+        async with Database() as client:
+            async with client.transaction():
+                email = await client.emails.fetch_by_address(email)
+            if not email:
+                raise NotAuthorizedException()
+            for password_model in email.user.passwords:
+                if password_model.verify(password):
+                    return AuthenticationResult(user=email.user, auth=email)
+        raise NotAuthorizedException()
+
+
+class OtacAuthentication(Strategy):
+    authorization = re.compile(
         rf"Bearer\s([\w\-+/=]{'{'}{math.ceil(models.Code.size * 4 / 3)}{'}'})", re.ASCII
     )
 
     @classmethod
-    async def authenticate(
-        cls, connection: ASGIConnection, authorization: str
+    def processable(cls, authorization: str) -> bool:
+        return cls.authorization.match(authorization) is not None
+
+    @classmethod
+    def scheme(cls) -> str:
+        return "Token"
+
+    async def authenticate_request(
+        self, connection: ASGIConnection, authorization: str
     ) -> AuthenticationResult:
-        if not (match := cls.pattern.match(authorization)):
-            raise cls.not_authorized(connection.url)
+        if not (match := self.authorization.match(authorization)):
+            raise NotAuthorizedException()
         if not (token := match.group(1)):
-            raise cls.not_authorized(connection.url)
+            raise NotAuthorizedException()
         async with Database() as client:
             async with client.transaction():
                 code = await client.codes.fetch_by_token(token)
             if not code:
-                raise cls.not_authorized(connection.url)
+                raise NotAuthorizedException()
             async with client.transaction():
                 code.email.verified = True
                 await client.passwords.invalidate_by_email(code.email.address)
-                # await client.codes.delete_by_user_id(code.email.user.id)
         return AuthenticationResult(user=code.email.user, auth=code)
-
-    @staticmethod
-    def challenges(url: URL) -> Iterable[str]:
-        return [f'Bearer realm="{url.hostname}"']
-
-
-class JwtTokenAuthentication(AbstractAuthentication):
-    pattern = re.compile(
-        r"^Bearer\s((?:ey\w+\.){2}\w+)$",
-    )
-
-    @classmethod
-    async def authenticate(
-        cls, connection: ASGIConnection, authorization: str
-    ) -> AuthenticationResult:
-        if not (match := cls.pattern.match(authorization)):
-            raise cls.not_authorized(connection.url)
-        if not (jwt := match.group(1)):
-            raise cls.not_authorized(connection.url)
-        try:
-            token = schemas.token.Token.decode(jwt, connection.base_url)
-        except schemas.token.exceptions.TokenDecodeException as error:
-            raise cls.not_authorized(connection.url) from error
-        async with Database() as client:
-            async with client.transaction():
-                session = await client.sessions.fetch_by_id(token.session)
-        if not session:
-            raise cls.not_authorized(connection.url)
-        if session.expire < datetime.now():
-            raise cls.not_authorized(connection.url)
-        return AuthenticationResult(user=session.user, auth=token)
-
-    @staticmethod
-    def challenges(url: URL) -> Iterable[str]:
-        return [f'Bearer realm="{url.hostname}"']
-
-
-class AnyAuthentication(AbstractAuthentication):
-    @classmethod
-    async def authenticate(
-        cls, connection: ASGIConnection, authorization: str
-    ) -> AuthenticationResult:
-        strategies = [
-            PasswordAuthentication,
-            OtacTokenAuthentication,
-            JwtTokenAuthentication,
-        ]
-        for strategy in strategies:
-            try:
-                return await strategy.authenticate(connection, authorization)
-            except NotAuthorizedException:
-                pass
-        raise cls.not_authorized(connection.url)
-
-    @staticmethod
-    def challenges(url: URL) -> Iterable[str]:
-        return chain(
-            JwtTokenAuthentication.challenges(url),
-            PasswordAuthentication.challenges(url),
-            OtacTokenAuthentication.challenges(url),
-        )

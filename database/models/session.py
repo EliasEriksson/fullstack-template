@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import *
 from uuid import UUID
 from datetime import datetime
+from datetime import timezone
 from datetime import timedelta
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -11,7 +12,6 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import DateTime
 from sqlalchemy import UniqueConstraint
 from .base import Base
-from ..constants import Cascades
 from ..constants import CASCADE
 from ..constants import Lazy
 
@@ -21,10 +21,10 @@ if TYPE_CHECKING:
 
 class Session(Base):
     __tablename__ = "session"
-    __table_args__ = tuple(UniqueConstraint("user_id", "agent", "host"))
+    __table_args__ = (UniqueConstraint("agent", "host"),)
     expire: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now() + timedelta(days=30),
+        default=lambda: datetime.now(tz=timezone.utc) + timedelta(days=30),
         nullable=False,
     )
     host: Mapped[str] = mapped_column(
@@ -45,5 +45,7 @@ class Session(Base):
     )
 
     def refresh(self) -> Self:
-        self.expire = cast(Mapped[datetime], datetime.now() + timedelta(days=30))
+        self.expire = cast(
+            Mapped[datetime], datetime.now(tz=timezone.utc) + timedelta(days=30)
+        )
         return self
