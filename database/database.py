@@ -19,7 +19,7 @@ class Database:
         self._configuration = (
             configuration if configuration is not None else Configuration()
         )
-        self._engine = create_async_engine(self._configuration.database.url, echo=False)
+        self._engine = create_async_engine(self._configuration.database.url, echo=True)
         self._session_maker = async_sessionmaker(self._engine, expire_on_commit=False)
 
     async def create(self) -> None:

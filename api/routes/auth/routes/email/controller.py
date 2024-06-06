@@ -8,6 +8,7 @@ from ..... import schemas
 from ..... import middlewares
 from database import Database
 from database import models
+from uuid import uuid4
 
 
 class Controller(LitestarController):
@@ -22,15 +23,10 @@ class Controller(LitestarController):
     async def fetch(
         self, request: Request[models.User, models.Code, Any]
     ) -> Response[schemas.resource.Otac[schemas.email.Email]]:
-        print("7")
         async with Database() as client:
             async with client.transaction():
-                print("8")
                 email = await client.emails.fetch_by_code(request.auth.token)
-                print("9", email)
-                code = await client.codes.create(models.Code(email=email))
-                print("10", code)
-            print("11")
+                code = await client.codes.create(models.Code(id=uuid4(), email=email))
         return Response(
             schemas.resource.Otac(
                 schemas.email.Email.from_object(email),

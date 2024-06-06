@@ -20,7 +20,7 @@ class Code(Base):
     size = 64
     token: Mapped[str] = mapped_column(
         String(),
-        default=secrets.token_urlsafe(size),
+        default=lambda: secrets.token_urlsafe(Code.size),
         nullable=False,
     )
     email_id: Mapped[str] = mapped_column(
@@ -29,6 +29,6 @@ class Code(Base):
     )
     email: Mapped[Email] = relationship(
         back_populates="code",
-        cascade=Cascades.default(),
+        # cascade=Cascades.default(),
         lazy=Lazy.default(),
     )
