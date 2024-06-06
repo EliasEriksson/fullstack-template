@@ -41,7 +41,6 @@ class Session(Base):
     )
     user: Mapped[User] = relationship(
         back_populates="sessions",
-        cascade=Cascades.default(),
         lazy=Lazy.default(),
     )
 

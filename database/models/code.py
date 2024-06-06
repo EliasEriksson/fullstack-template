@@ -29,6 +29,5 @@ class Code(Base):
     )
     email: Mapped[Email] = relationship(
         back_populates="code",
-        # cascade=Cascades.default(),
         lazy=Lazy.default(),
     )

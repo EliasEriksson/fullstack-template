@@ -35,7 +35,6 @@ class Password(Base):
     )
     user: Mapped[User] = relationship(
         back_populates="passwords",
-        cascade=Cascades.default(),
         lazy=Lazy.default(),
     )
 
