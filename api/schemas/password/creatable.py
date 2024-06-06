@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import *
-from . import password
 from pydantic import model_validator
+from . import password
+from database import models
 
 
 class CreatableProtocol(password.PasswordProtocol, Protocol):
@@ -16,3 +17,6 @@ class Creatable(password.Password):
         if self.password != self.repeat:
             raise ValueError(f"Passwords does not match.")
         return self
+
+    def create(self, user: models.User) -> models.Password:
+        return models.Password(digest=models.Password.hash(self.password), user=user)

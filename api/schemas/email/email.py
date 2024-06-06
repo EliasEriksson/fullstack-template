@@ -11,13 +11,3 @@ class EmailProtocol(base.BaseProtocol, Protocol):
 class Email(base.Base):
     address: str
     verified: Optional[bool] = None
-
-    # @classmethod
-    # def from_protocol(cls, email: EmailProtocol) -> Email:
-    #     return cls(
-    #         id=email.id,
-    #         address=email.address,
-    #         verified=email.verified,
-    #         modified=email.modified,
-    #         created=email.created,
-    #     )
