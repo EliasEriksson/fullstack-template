@@ -6,6 +6,7 @@ from litestar.params import Parameter
 from litestar import Request
 from litestar import post
 from litestar import put
+from litestar import delete
 from litestar.exceptions import ClientException
 from api.headers import Headers
 from database import Database
@@ -14,6 +15,9 @@ from database.exceptions import IntegrityError
 from api import schemas
 from api.middlewares.authentication import Authentication
 from api.middlewares.authentication import JwtAuthentication
+
+
+authentication = DefineMiddleware(Authentication, JwtAuthentication())
 
 
 class Controller(LitestarController):
@@ -54,7 +58,7 @@ class Controller(LitestarController):
     @put(
         path="",
         tags=["auth"],
-        middleware=[DefineMiddleware(Authentication, JwtAuthentication())],
+        middleware=[authentication],
     )
     async def set(
         self,
@@ -73,3 +77,11 @@ class Controller(LitestarController):
                 password = data.to_model()
                 password.user_id = request.user.id
                 await client.passwords.create(password)
+
+    @delete(
+        path="",
+        tags=["auth"],
+        middleware=[authentication],
+    )
+    async def delete(self) -> None:
+        return None

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import *
 from abc import ABC, abstractmethod
 import re
 import math
@@ -175,4 +174,5 @@ class OtacAuthentication(Strategy):
             async with client.transaction():
                 code.email.verified = True
                 await client.passwords.invalidate_by_email(code.email.address)
+                await client.codes.delete_by_user_id(code.email.user_id)
         return AuthenticationResult(user=code.email.user, auth=code)
