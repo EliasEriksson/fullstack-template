@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import asyncio
 from typing import *
 from litestar import Controller as LitestarController
 from litestar.middleware import DefineMiddleware
@@ -15,9 +17,13 @@ from database.exceptions import IntegrityError
 from api import schemas
 from api.middlewares.authentication import Authentication
 from api.middlewares.authentication import JwtAuthentication
+from services.email import Email
 
 
-authentication = DefineMiddleware(Authentication, JwtAuthentication())
+authentication = DefineMiddleware(
+    Authentication,
+    JwtAuthentication(),
+)
 
 
 class Controller(LitestarController):
@@ -83,5 +89,22 @@ class Controller(LitestarController):
         tags=["auth"],
         middleware=[authentication],
     )
-    async def delete(self) -> None:
+    async def delete(
+        self,
+        request: Request[models.User, schemas.Token, Any],
+    ) -> None:
+        async with Database() as client:
+            async with client.transaction():
+                code = await client.codes.create(
+                    models.Code(email_id=request.auth.email)
+                )
+                email = await client.emails.fetch_by_id(request.auth.email)
+            mailer = Email()
+            asyncio.ensure_future(
+                mailer.send_text(
+                    email.address,
+                    "Password reset",
+                    f"Password reset OTAC: {code.token}",
+                )
+            )
         return None
