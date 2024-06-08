@@ -37,7 +37,6 @@ class TokenProtocol(Protocol):
     issuer: str
     subject: UUID
     session: UUID
-    email: UUID
     secure: bool
     issued: datetime
     expires: datetime
@@ -47,7 +46,6 @@ class Token(Schema):
     audience: str
     issuer: str
     subject: UUID
-    email: UUID
     session: UUID
     secure: bool
     issued: datetime
@@ -75,7 +73,6 @@ class Token(Schema):
             Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
             Claims.session: str(self.session),
-            Claims.email: str(self.email),
             Claims.secure: self.secure,
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
@@ -99,7 +96,6 @@ class Token(Schema):
                 issuer=token[Claims.issuer],
                 subject=UUID(token[Claims.subject]),
                 session=UUID(token[Claims.session]),
-                email=UUID(token[Claims.email]),
                 secure=token[Claims.secure],
                 expires=datetime.fromtimestamp(token[Claims.expires]),
                 issued=datetime.fromtimestamp(token[Claims.issued]),
@@ -132,9 +128,8 @@ class Token(Schema):
         return cls(
             issuer=str(issuer),
             audience=str(audience),
-            subject=session.user.id,
+            subject=email,
             session=session.id,
-            email=email,
             secure=len(session.user.passwords) > 0,
             issued=now,
             expires=cls._expires(now),

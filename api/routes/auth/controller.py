@@ -82,7 +82,7 @@ class Controller(LitestarController):
             if isinstance(request.auth, schemas.Token):
                 async with client.transaction():
                     session = await client.sessions.fetch_by_id(request.auth.session)
-                    email = request.auth.email
+                    email = request.auth.subject
                 if not session:
                     raise ClientException()
             elif isinstance(request.auth, (models.Email, models.Code)):

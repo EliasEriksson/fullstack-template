@@ -55,7 +55,10 @@ class Controller(LitestarController):
             async with client.transaction():
                 session.refresh()
             result = schemas.Token.create(
-                session, request.auth.email, request.url.hostname, request.url.hostname
+                session,
+                request.auth.subject,
+                request.url.hostname,
+                request.url.hostname,
             )
             return schemas.Resource(
                 result.encode(),
@@ -70,7 +73,7 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, schemas.Token, Any],
         data: schemas.password.Settable,
-    ) -> None:
+    ) -> schemas.Resource[str]:
         async with Database() as client:
             async with client.transaction():
                 passwords = await client.passwords.fetch_valid_passwords(request.user)
@@ -83,6 +86,17 @@ class Controller(LitestarController):
                 password = data.to_model()
                 password.user_id = request.user.id
                 await client.passwords.create(password)
+                session = await client.sessions.fetch_by_id(request.auth.session)
+            if not session:
+                raise ClientException()
+            return schemas.Resource(
+                schemas.Token.create(
+                    session,
+                    request.auth.subject,
+                    request.url.hostname,
+                    request.url.hostname,
+                ).encode()
+            )
 
     @delete(
         path="",
@@ -96,9 +110,9 @@ class Controller(LitestarController):
         async with Database() as client:
             async with client.transaction():
                 code = await client.codes.create(
-                    models.Code(email_id=request.auth.email)
+                    models.Code(email_id=request.auth.subject)
                 )
-                email = await client.emails.fetch_by_id(request.auth.email)
+                email = await client.emails.fetch_by_id(request.auth.subject)
             mailer = Email()
             asyncio.ensure_future(
                 mailer.send_text(
