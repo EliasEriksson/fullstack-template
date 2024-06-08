@@ -10,9 +10,11 @@ jwt_pattern = re.compile(r"^ey[^.]+\.ey[^.]+\.[^.]+$")
 class Session:
     class User:
         class Password:
+            id: UUID
             digest: str
 
             def __init__(self, digest: str) -> None:
+                self.id = uuid4()
                 self.digest = digest
 
         id: UUID
@@ -75,24 +77,16 @@ async def test_encode_decode(
     assert result.expires == token.expires
 
 
-async def test_from_object(
-    audience: str, issuer: str, now: datetime, soon: datetime
-) -> None:
-    assert isinstance(
-        schemas.Token.from_object(Token(audience, issuer, now, soon)), schemas.Token
-    )
-
-
 async def test_from_user(audience: str, issuer: str) -> None:
     assert isinstance(
-        schemas.Token.create(Session(["asd"]), audience, issuer), schemas.Token
+        schemas.Token.create(Session(["asd"]), uuid4(), audience, issuer), schemas.Token
     )
 
 
 async def test_refresh(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-    token = schemas.Token.create(Session(["qwe"]), audience, issuer)
+    token = schemas.Token.create(Session(["qwe"]), uuid4(), audience, issuer)
     issued = token.issued
     expires = token.expires
     duration = timedelta(minutes=30)

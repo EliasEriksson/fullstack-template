@@ -1,5 +1,5 @@
 from shared.dependency.exceptions import DependencyNotFoundError
-from api.services import Email
+from api.services.email import Email
 from api.services.email.local import Local
 
 
@@ -8,7 +8,7 @@ async def test_registry() -> None:
 
     class EmailImplementation(Email):
 
-        async def send_text(self, text: str) -> None:
+        async def send_text(self, recipient: str, subject: str, text: str) -> None:
             return
 
         @classmethod

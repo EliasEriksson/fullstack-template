@@ -18,6 +18,9 @@ postgres, python + litestar, TypeScript + Next.js
 * python-jose[cryptography]
 * msgspec
 * psycopg
+* pytest
+* pytest-asyncio
+* click
 
 * [click](https://pypi.org/project/click/)
 * [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)

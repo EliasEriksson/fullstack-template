@@ -18,19 +18,17 @@ from sqlalchemy.orm import Mapped
 from ..schema import Schema
 
 
-class ResourceProtocol(Protocol):
+class PasswordProtocol(Protocol):
     id: UUID
 
 
-class PasswordProtocol(ResourceProtocol, Protocol):
-    pass
-
-
-class UserProtocol(ResourceProtocol, Protocol):
+class UserProtocol(Protocol):
+    id: UUID
     passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
 
 
-class SessionProtocol(ResourceProtocol, Protocol):
+class SessionProtocol(Protocol):
+    id: UUID
     user: UserProtocol | Mapped[UserProtocol]
 
 

@@ -1,4 +1,4 @@
-from database import Database
+from api.database import Database
 from api.database import models
 from uuid import UUID
 

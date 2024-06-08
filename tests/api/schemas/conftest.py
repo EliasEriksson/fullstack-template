@@ -23,6 +23,7 @@ async def token(now: datetime, soon: datetime, audience: str, issuer: str) -> No
         issuer=issuer,
         subject=uuid4(),
         session=uuid4(),
+        email=uuid4(),
         secure=True,
         issued=now,
         expires=soon,

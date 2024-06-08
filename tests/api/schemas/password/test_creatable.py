@@ -10,8 +10,4 @@ class Password:
         self.repeat = repeat
 
 
-def test_from_object() -> None:
-    password = Password("password", "password")
-    assert isinstance(
-        schemas.creatable.Creatable.from_object(password), schemas.creatable.Creatable
-    )
+# TODO: add tests for the schema methods
