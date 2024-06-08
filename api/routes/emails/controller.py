@@ -4,7 +4,6 @@ from uuid import UUID
 from litestar import Controller as LitestarController
 from litestar.middleware import DefineMiddleware
 from litestar import Request
-from litestar import Response
 from litestar import get
 from litestar.exceptions import NotFoundException
 from api.middlewares.authentication import Authentication
@@ -22,12 +21,13 @@ class Controller(LitestarController):
         path="/{id:uuid}",
         tags=["email"],
         middleware=[DefineMiddleware(Authentication, JwtAuthentication(secure=False))],
+        return_dto=schemas.email.DTO,
     )
     async def fetch(
         self,
         request: Request[models.User, schemas.Token, Any],
         id: UUID,
-    ) -> Response[schemas.Resource[schemas.Email]]:
+    ) -> schemas.Resource[models.Email]:
         if id != request.auth.email:
             raise ForbiddenException(
                 f"Your user might not have a password yet. Create a password, reauthenticate and try again."
@@ -37,8 +37,4 @@ class Controller(LitestarController):
                 email = await client.emails.fetch_by_id(request.auth.email)
             if not email:
                 raise NotFoundException()
-            return Response(
-                schemas.Resource(
-                    schemas.Email.from_object(email),
-                )
-            )
+            return schemas.Resource(email)

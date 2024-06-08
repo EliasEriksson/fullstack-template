@@ -1,11 +1,6 @@
 from __future__ import annotations
-from typing import *
-from ..model import Model
+from ..schema import Schema
 
 
-class PasswordProtocol(Protocol):
-    password: str
-
-
-class Password(Model):
+class Password(Schema):
     password: str

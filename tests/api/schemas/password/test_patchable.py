@@ -15,5 +15,5 @@ class Password:
 async def test_from_object() -> None:
     password = Password("old", "password", "password")
     assert isinstance(
-        schemas.patchable.Patchable.from_object(password), schemas.patchable.Patchable
+        schemas.patchable.Settable.from_object(password), schemas.patchable.Settable
     )

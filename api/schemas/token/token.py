@@ -15,22 +15,22 @@ from jose.exceptions import JWTClaimsError
 from litestar.datastructures.url import URL
 from uuid import UUID
 from sqlalchemy.orm import Mapped
-from ..model import Model
+from ..schema import Schema
 
 
-class Resource(Protocol):
+class ResourceProtocol(Protocol):
     id: UUID
 
 
-class PasswordProtocol(Resource, Protocol):
+class PasswordProtocol(ResourceProtocol, Protocol):
     pass
 
 
-class UserProtocol(Resource, Protocol):
+class UserProtocol(ResourceProtocol, Protocol):
     passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
 
 
-class SessionProtocol(Resource, Protocol):
+class SessionProtocol(ResourceProtocol, Protocol):
     user: UserProtocol | Mapped[UserProtocol]
 
 
@@ -45,7 +45,7 @@ class TokenProtocol(Protocol):
     expires: datetime
 
 
-class Token(Model):
+class Token(Schema):
     audience: str
     issuer: str
     subject: UUID
@@ -123,7 +123,7 @@ class Token(Model):
             raise TokenDecodeException() from error
 
     @classmethod
-    def from_session(
+    def create(
         cls,
         session: SessionProtocol,
         email: UUID,

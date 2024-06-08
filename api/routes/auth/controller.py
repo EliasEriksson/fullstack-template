@@ -4,7 +4,6 @@ import asyncio
 from litestar import Controller as LitestarController
 from litestar import post
 from litestar import get
-from litestar import Response
 from litestar import Request
 from litestar.params import Parameter
 from litestar.middleware.base import DefineMiddleware
@@ -78,7 +77,7 @@ class Controller(LitestarController):
             models.User, schemas.Token | models.Password | models.Code, Any
         ],
         agent: Annotated[str, Parameter(header=Headers.user_agent)],
-    ) -> Response[schemas.Resource[str]]:
+    ) -> schemas.Resource[str]:
         async with Database() as client:
             if isinstance(request.auth, schemas.Token):
                 async with client.transaction():
@@ -100,11 +99,9 @@ class Controller(LitestarController):
             else:
                 # TODO: add www-authenticate header.
                 raise NotAuthorizedException()
-            result = schemas.Token.from_session(
+            result = schemas.Token.create(
                 session, email, request.url.hostname, request.url.hostname
             )
-            return Response(
-                schemas.Resource(
-                    result.encode(),
-                )
+            return schemas.Resource(
+                result.encode(),
             )

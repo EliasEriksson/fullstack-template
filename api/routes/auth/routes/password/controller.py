@@ -4,7 +4,6 @@ from litestar import Controller as LitestarController
 from litestar.middleware import DefineMiddleware
 from litestar.params import Parameter
 from litestar import Request
-from litestar import Response
 from litestar import post
 from litestar import put
 from litestar.exceptions import ClientException
@@ -31,12 +30,13 @@ class Controller(LitestarController):
         request: Request[models.User, schemas.Token, Any],
         agent: Annotated[str, Parameter(header=Headers.user_agent)],
         data: schemas.password.Creatable,
-    ) -> Response[schemas.Resource[str]]:
+    ) -> schemas.Resource[str]:
         async with Database() as client:
             async with client.transaction():
-
                 try:
-                    await client.passwords.create(data.create(request.user))
+                    password = data.to_model()
+                    password.user = request.user
+                    await client.passwords.create(password)
                 except IntegrityError as error:
                     raise ClientException("Already have a password.") from error
                 session = await client.sessions.fetch_by_connection(
@@ -44,13 +44,11 @@ class Controller(LitestarController):
                 )
             async with client.transaction():
                 session.refresh()
-            result = schemas.Token.from_session(
+            result = schemas.Token.create(
                 session, request.auth.email, request.url.hostname, request.url.hostname
             )
-            return Response(
-                schemas.Resource(
-                    result.encode(),
-                )
+            return schemas.Resource(
+                result.encode(),
             )
 
     @put(
@@ -58,5 +56,20 @@ class Controller(LitestarController):
         tags=["auth"],
         middleware=[DefineMiddleware(Authentication, JwtAuthentication())],
     )
-    async def set(self, request: Request[models.User, schemas.Token, Any]) -> None:
-        return
+    async def set(
+        self,
+        request: Request[models.User, schemas.Token, Any],
+        data: schemas.password.Settable,
+    ) -> None:
+        async with Database() as client:
+            async with client.transaction():
+                passwords = await client.passwords.fetch_valid_passwords(request.user)
+            if not next(
+                (password for password in passwords if password.verify(data.old)), None
+            ):
+                raise ClientException()
+            async with client.transaction():
+                await client.passwords.invalidate_by_user(request.user.id)
+                password = data.to_model()
+                password.user_id = request.user.id
+                await client.passwords.create(password)

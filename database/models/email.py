@@ -6,14 +6,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import String
 from sqlalchemy import ForeignKey
 from sqlalchemy import Boolean
-from sqlalchemy import Uuid
 from sqlalchemy.sql.expression import false
 from uuid import UUID
 from .base import Base
 from ..constants import Cascades
 from ..constants import Lazy
 from ..constants import CASCADE
-from ..constants import gen_random_uuid
 
 if TYPE_CHECKING:
     from .user import User
@@ -27,7 +25,7 @@ class Email(Base):
         unique=True,
         nullable=False,
     )
-    verified: Mapped[Boolean] = mapped_column(
+    verified: Mapped[bool] = mapped_column(
         Boolean(),
         server_default=false(),
         nullable=False,

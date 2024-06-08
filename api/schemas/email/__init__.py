@@ -1,1 +1,1 @@
-from .email import Email, EmailProtocol
+from .email import DTO

@@ -1,14 +1,9 @@
 from __future__ import annotations
-from typing import *
-from ..model import Model
+from ..schema import Schema
 from database import models
 
 
-class CreatableProtocol(Protocol):
-    email: str
-
-
-class Creatable(Model):
+class Creatable(Schema):
     email: str
 
     def create(self) -> tuple[models.User, models.Email, models.Code]:

@@ -85,14 +85,14 @@ async def test_from_object(
 
 async def test_from_user(audience: str, issuer: str) -> None:
     assert isinstance(
-        schemas.Token.from_session(Session(["asd"]), audience, issuer), schemas.Token
+        schemas.Token.create(Session(["asd"]), audience, issuer), schemas.Token
     )
 
 
 async def test_refresh(
     audience: str, issuer: str, now: datetime, soon: datetime
 ) -> None:
-    token = schemas.Token.from_session(Session(["qwe"]), audience, issuer)
+    token = schemas.Token.create(Session(["qwe"]), audience, issuer)
     issued = token.issued
     expires = token.expires
     duration = timedelta(minutes=30)

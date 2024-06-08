@@ -15,6 +15,17 @@ class Passwords(CRUD[models.Password]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, models.Password)
 
+    async def fetch_valid_passwords(
+        self, user: models.User
+    ) -> Sequence[models.Password]:
+        query = (
+            select(models.Password)
+            .where(cast(ColumnElement, models.Password.user == user))
+            .where(cast(ColumnElement, models.Password.valid == True))
+        )
+        result = await self._session.execute(query)
+        return result.scalars().all()
+
     async def create(self, model: models.Password) -> models.Password:
         query = select(models.Password).where(
             cast(ColumnElement, models.Password.valid == True)
@@ -26,6 +37,15 @@ class Passwords(CRUD[models.Password]):
         elif len(passwords):
             raise IntegrityError("User already have password.")
         return await super().create(model)
+
+    async def invalidate_by_user(self, user: UUID) -> int:
+        query = (
+            update(models.Password)
+            .values(valid=False)
+            .where(cast(ColumnElement, models.Password.user_id == user))
+        )
+        result = await self._session.execute(query)
+        return cast(int, result.rowcount)
 
     async def invalidate_by_email(self, email: str) -> int:
         query = (

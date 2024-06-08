@@ -4,6 +4,7 @@ from . import routes
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi import OpenAPIController
 from litestar.static_files.config import StaticFilesConfig
+from advanced_alchemy.extensions.litestar.plugins import SQLAlchemySerializationPlugin
 from pathlib import Path
 
 
@@ -26,5 +27,6 @@ api = Litestar(
         root_schema_site="elements",
         openapi_controller=DocumentationController,
     ),
+    plugins=[SQLAlchemySerializationPlugin()],
     debug=True,
 )

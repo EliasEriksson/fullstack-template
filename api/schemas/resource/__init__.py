@@ -1,5 +1,3 @@
-from .resource import Resource
 from . import resource
-from .paged import Paged
-from . import paged
-from .otac import Otac
+from .resource import Resource
+from .list import List

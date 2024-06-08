@@ -5,10 +5,6 @@ from . import password
 from database import models
 
 
-class CreatableProtocol(password.PasswordProtocol, Protocol):
-    repeat: str
-
-
 class Creatable(password.Password):
     repeat: str
 
@@ -18,5 +14,5 @@ class Creatable(password.Password):
             raise ValueError(f"Passwords does not match.")
         return self
 
-    def create(self, user: models.User) -> models.Password:
-        return models.Password(digest=models.Password.hash(self.password), user=user)
+    def to_model(self) -> models.Password:
+        return models.Password(digest=models.Password.hash(self.password))

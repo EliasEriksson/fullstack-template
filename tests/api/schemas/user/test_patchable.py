@@ -29,14 +29,14 @@ async def test_from_object(now: datetime, soon: datetime) -> None:
     user = User(
         uuid4(),
         "jessie@rocket.com",
-        schemas.password.patchable.Patchable(
+        schemas.password.patchable.Settable(
             old="old", password="password", repeat="password"
         ),
         now,
         soon,
     )
     assert user.password is not None
-    assert isinstance(schemas.user.Patchable.from_object(user), schemas.user.Patchable)
+    assert isinstance(schemas.user.Settable.from_object(user), schemas.user.Settable)
     user = User(user.id, user.email, None, now, soon)
     assert user.password is None
-    assert isinstance(schemas.user.Patchable.from_object(user), schemas.user.Patchable)
+    assert isinstance(schemas.user.Settable.from_object(user), schemas.user.Settable)
