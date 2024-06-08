@@ -1,6 +1,6 @@
 from __future__ import annotations
 from ..schema import Schema
-from database import models
+from ...database import models
 
 
 class Creatable(Schema):

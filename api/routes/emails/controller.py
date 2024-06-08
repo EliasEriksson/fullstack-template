@@ -10,8 +10,8 @@ from api.middlewares.authentication import Authentication
 from api.middlewares.authentication import JwtAuthentication
 from api import schemas
 from api.exceptions import ForbiddenException
-from database import Database
-from database import models
+from api.database import Database
+from api.database import models
 
 
 class Controller(LitestarController):

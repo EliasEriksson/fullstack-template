@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import *
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
-from database.models.base import Base
+from api.database.models.base import Base
 from ..constants import Cascades
 from ..constants import Lazy
 

@@ -1,5 +1,5 @@
 from database import Database
-from database import models
+from api.database import models
 from uuid import UUID
 
 

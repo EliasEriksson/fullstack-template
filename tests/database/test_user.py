@@ -1,5 +1,5 @@
 from database import Database
-from database import models
+from api.database import models
 
 
 async def test_fetch_by_email(database: Database) -> None:

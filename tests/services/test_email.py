@@ -1,6 +1,6 @@
 from shared.dependency.exceptions import DependencyNotFoundError
-from services.email import Email
-from services.email.local import Local
+from api.services import Email
+from api.services.email.local import Local
 
 
 async def test_registry() -> None:

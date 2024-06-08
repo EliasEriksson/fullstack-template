@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, select
 from sqlalchemy.sql.expression import ColumnElement
-from database.operations.crud import CRUD
+from api.database.operations.crud import CRUD
 from ..exceptions import IntegrityError
 from .. import models
 

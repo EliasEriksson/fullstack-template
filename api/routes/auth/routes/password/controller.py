@@ -11,13 +11,13 @@ from litestar import put
 from litestar import delete
 from litestar.exceptions import ClientException
 from api.headers import Headers
-from database import Database
-from database import models
-from database.exceptions import IntegrityError
+from api.database import Database
+from api.database import models
+from api.database.exceptions import IntegrityError
 from api import schemas
 from api.middlewares.authentication import Authentication
 from api.middlewares.authentication import JwtAuthentication
-from services.email import Email
+from api.services.email import Email
 
 
 authentication = DefineMiddleware(

@@ -3,7 +3,7 @@ from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy import select
-from database.operations.crud import CRUD
+from api.database.operations.crud import CRUD
 from .. import models
 
 

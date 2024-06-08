@@ -28,10 +28,10 @@ class Configuration:
         self.alembic = (
             alembic if alembic is not None else AlembicConfiguration("./alembic.ini")
         )
-
         self.migrations = Path(
             self.alembic.get_main_option("script_location")
         ).joinpath("versions")
+
         try:
             self.migrations.mkdir(exist_ok=True)
         except FileNotFoundError:

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import *
 from pydantic import model_validator
 from . import password
-from database import models
+from ...database import models
 
 
 class Creatable(password.Password):

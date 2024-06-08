@@ -1,7 +1,7 @@
 database.sqlite
 **/*.pem
 **/*.pub
-migrations/versions/**
+api/database/migrations/versions/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

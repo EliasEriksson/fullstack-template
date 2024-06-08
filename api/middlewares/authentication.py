@@ -10,8 +10,8 @@ from litestar.exceptions import NotAuthorizedException
 from litestar.connection import ASGIConnection
 from litestar.middleware import AuthenticationResult
 from litestar.middleware import AbstractAuthenticationMiddleware
-from database import Database
-from database import models
+from api.database import Database
+from api.database import models
 from api.exceptions import ForbiddenException
 from api import schemas
 from api.headers import Headers

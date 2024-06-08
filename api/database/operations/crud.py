@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import ColumnElement
-from database.models import Base as BaseModel
-from database.page import Page
+from api.database.models import Base as BaseModel
+from api.database.page import Page
 from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy import select
