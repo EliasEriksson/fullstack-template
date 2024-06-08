@@ -6,3 +6,4 @@ from . import auth
 from . import email
 from . import resource
 from .resource import Resource
+from . import user
