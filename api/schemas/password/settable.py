@@ -1,6 +1,6 @@
 from __future__ import annotations
-from . import creatable
+from .creatable import Creatable
 
 
-class Settable(creatable.Creatable):
+class Settable(Creatable):
     old: str
