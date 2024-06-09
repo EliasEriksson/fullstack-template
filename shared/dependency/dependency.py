@@ -30,8 +30,7 @@ class Dependency(ABC):
 
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
-        ...
+    def name(cls) -> str: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
