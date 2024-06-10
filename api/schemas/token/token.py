@@ -11,15 +11,25 @@ from jose import jwt
 from jose.exceptions import JWSError
 from jose.exceptions import JWKError
 from jose.exceptions import ExpiredSignatureError
+from jose.exceptions import JWTClaimsError
 from litestar.datastructures.url import URL
 from uuid import UUID
 from sqlalchemy.orm import Mapped
-from ..model import Model
+from ..schema import Schema
 
 
-class User(Protocol):
+class PasswordProtocol(Protocol):
     id: UUID
-    session: UUID
+
+
+class UserProtocol(Protocol):
+    id: UUID
+    passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
+
+
+class SessionProtocol(Protocol):
+    id: UUID
+    user: UserProtocol | Mapped[UserProtocol]
 
 
 class TokenProtocol(Protocol):
@@ -27,15 +37,17 @@ class TokenProtocol(Protocol):
     issuer: str
     subject: UUID
     session: UUID
+    secure: bool
     issued: datetime
     expires: datetime
 
 
-class Token(Model):
+class Token(Schema):
     audience: str
     issuer: str
     subject: UUID
     session: UUID
+    secure: bool
     issued: datetime
     expires: datetime
 
@@ -61,6 +73,7 @@ class Token(Model):
             Claims.issuer: self.issuer,
             Claims.subject: str(self.subject),
             Claims.session: str(self.session),
+            Claims.secure: self.secure,
             Claims.expires: round(self.expires.timestamp()),
             Claims.issued: round(self.issued.timestamp()),
         }
@@ -83,6 +96,7 @@ class Token(Model):
                 issuer=token[Claims.issuer],
                 subject=UUID(token[Claims.subject]),
                 session=UUID(token[Claims.session]),
+                secure=token[Claims.secure],
                 expires=datetime.fromtimestamp(token[Claims.expires]),
                 issued=datetime.fromtimestamp(token[Claims.issued]),
             )
@@ -99,17 +113,24 @@ class Token(Model):
                     audience=str(audience),
                 )
             )
-        except (JWKError, ExpiredSignatureError) as error:
+        except (JWKError, ExpiredSignatureError, JWTClaimsError) as error:
             raise TokenDecodeException() from error
 
     @classmethod
-    def from_user(cls, user: User, audience: str | URL, issuer: str | URL) -> Token:
+    def create(
+        cls,
+        session: SessionProtocol,
+        email: UUID,
+        audience: str | URL,
+        issuer: str | URL,
+    ) -> Token:
         now = cls._now()
         return cls(
             issuer=str(issuer),
             audience=str(audience),
-            subject=user.id,
-            session=user.session,
+            subject=email,
+            session=session.id,
+            secure=len(session.user.passwords) > 0,
             issued=now,
             expires=cls._expires(now),
         )

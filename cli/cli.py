@@ -19,15 +19,16 @@ cli.add_command(database.cli)
 @cli.command()
 @configuration_options
 def test(**environment: TEnvironment):
-    Configuration(
+    configuration = Configuration(
         cli={
-            Variables.mode: "test",
             **{
                 variable: value
                 for variable, value in environment.items()
                 if value is not None
             },
+            Variables.mode: "test",
         },
     )
+    print("Starting in mode:", configuration.mode)
     return_code = subprocess.call(["pytest", "--asyncio-mode", "auto", "tests"])
     sys.exit(return_code)

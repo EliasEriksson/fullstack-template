@@ -1,6 +1,6 @@
 from __future__ import annotations
 from configuration.environment.types import TEnvironment
-from database import Database
+from api.database import Database
 from configuration import Configuration
 from .options import configuration_options
 import asyncio
@@ -25,7 +25,7 @@ def delete(**environment: TEnvironment) -> None:
     configuration = Configuration(cli=environment)
     message = (
         f"This operation will delete all tables related to this "
-        f"application from the database '{configuration.database}'.\n"
+        f"application from the database '{configuration.database.name}'.\n"
         f"OBS! This operation is irreversible.\n"
         f"Are you sure you want to continue? (y/n): "
     )

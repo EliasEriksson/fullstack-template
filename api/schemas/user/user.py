@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import *
-from .. import base
+from litestar.contrib.sqlalchemy.dto import SQLAlchemyDTOConfig
+from litestar.contrib.sqlalchemy.dto import SQLAlchemyDTO
+from api.database import models
 
 
-class UserProtocol(base.BaseProtocol, Protocol):
-    email: str
-
-
-class User(base.Base):
-    email: str
+class DTO(SQLAlchemyDTO[models.User]):
+    config = SQLAlchemyDTOConfig(
+        exclude={"emails", "passwords", "sessions"},
+    )

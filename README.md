@@ -9,6 +9,18 @@ postgres, python + litestar, TypeScript + Next.js
 * [postgresql](https://www.postgresql.org/)
 
 ### Python dependencies (excluding peer dependencies):
+* SQLAlchemy
+* Litestar
+* xxhash
+* bcrypt
+* alembic
+* uvicorn
+* python-jose[cryptography]
+* msgspec
+* psycopg
+* pytest
+* pytest-asyncio
+* click
 
 * [click](https://pypi.org/project/click/)
 * [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)

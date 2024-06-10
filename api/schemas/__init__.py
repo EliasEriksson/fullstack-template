@@ -1,6 +1,9 @@
 from . import token
+from .token import Token
 from . import password
-from . import user
-from .base import Base, BaseProtocol
-from .paged_resource import PagedResource
+from .password import Password
+from . import auth
+from . import email
+from . import resource
 from .resource import Resource
+from . import user

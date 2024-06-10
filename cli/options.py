@@ -84,8 +84,8 @@ def configuration_options(command):
         click.option(
             "--mode",
             Variables.mode,
-            type=click.Choice(["prod", "dev"]),
-            help="THe mode in which the application is run in. Development (dev) or production (prod)",
+            type=click.Choice(["prod", "dev", "test"]),
+            help="The mode in which the application is run in. Development (dev) or production (prod)",
         ),
     }
     return reduce(lambda result, option: option(result), options, command)

@@ -1,97 +1,109 @@
 from __future__ import annotations
 from typing import *
+import asyncio
 from litestar import Controller as LitestarController
 from litestar import post
 from litestar import get
-from litestar import patch
-from litestar import delete
-from litestar import Response
 from litestar import Request
+from litestar.params import Parameter
 from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
-from database import Database
-from database import models
-from ...schemas.user import Creatable
-from ...schemas.user import Patchable
-from ...schemas import Resource
-from ...schemas.token import Token
-from .middlewares import BasicAuthentication
-from .middlewares import BearerAuthentication
+from litestar.exceptions import NotAuthorizedException
+from api.database import Database
+from ...database import models
+from sqlalchemy.exc import IntegrityError
+from ... import schemas
+from api.middlewares.authentication import Authentication
+from api.middlewares.authentication import PasswordAuthentication
+from api.middlewares.authentication import OtacAuthentication
+from api.middlewares.authentication import JwtAuthentication
+from api.headers import Headers
+from api.services.email import Email
 
-
-bearer = DefineMiddleware(BearerAuthentication)
-basic = DefineMiddleware(BasicAuthentication)
+authentication = DefineMiddleware(
+    Authentication,
+    JwtAuthentication(secure=False),
+    PasswordAuthentication(),
+    OtacAuthentication(),
+)
 
 
 class Controller(LitestarController):
     path = "/auth"
 
+    @get(
+        "/test",
+        middleware=[authentication],
+    )
+    async def test(self) -> None:
+        return None
+
     @post(
-        path="/",
-        tags=["user"],
-        summary="Register user",
+        "/",
+        tags=["auth"],
+        summary="Self registration.",
     )
     async def create(
         self,
-        request: Request[None, None, Any],
-        data: Creatable,
-    ) -> Response[Resource[str]]:
-        async with Database() as session:
-            async with session.transaction():
-                created = await session.users.create(models.User.from_creatable(data))
-        result = Token.from_user(created, request.base_url, request.base_url).encode()
-        return Response(
-            Resource(result),
+        request: Request,
+        data: schemas.auth.Creatable,
+    ) -> None:
+        async with Database() as client:
+            try:
+                async with client.transaction():
+                    user, email, code = data.create()
+                    await client.users.create(user)
+            except IntegrityError as error:
+                raise ClientException("Email already in use.") from error
+        mailer = Email()
+        asyncio.ensure_future(
+            mailer.send_text(
+                email.address,
+                f"{request.url.hostname} email verification.",
+                f"Your OTAC: {email.code.token}",
+            )
         )
+        return None
 
     @get(
         path="/",
-        tags=["authentication"],
-        summary="Authenticate user",
-        middleware=[basic],
+        tags=["auth"],
+        summary="Login.",
+        middleware=[authentication],
     )
     async def fetch(
         self,
-        request: Request[models.User, None, Any],
-    ) -> Response[Resource[str]]:
-        result = Token.from_user(
-            request.user, request.base_url, request.base_url
-        ).encode()
-        return Response(
-            Resource(result),
-        )
-
-    @patch(
-        path="/",
-        middleware=[bearer],
-    )
-    async def patch(
-        self,
-        request: Request[models.User, Token, Any],
-        data: Patchable,
-    ) -> Response[Resource[str]]:
-        if data.password:
-            if data.password.password != data.password.repeat:
-                raise ClientException("Repeated password not equal to new password.")
-            if not request.user.verify(data.password.old):
-                raise ClientException("Password missmatch.")
-        async with Database() as session:
-            async with session.transaction():
-                patched = await session.users.patch(request.user.patch(data))
-        result = Token.from_user(patched, request.base_url, request.base_url).encode()
-        return Response(
-            Resource(result),
-        )
-
-    @delete(
-        path="/",
-        middleware=[bearer],
-    )
-    async def delete(
-        self,
-        request: Request[models.User, Token, Any],
-    ) -> None:
-        async with Database() as session:
-            async with session.transaction():
-                await session.users.delete(request.user)
-        return
+        request: Request[
+            models.User, schemas.Token | models.Password | models.Code, Any
+        ],
+        agent: Annotated[str, Parameter(header=Headers.user_agent)],
+    ) -> schemas.Resource[str]:
+        async with Database() as client:
+            if isinstance(request.auth, schemas.Token):
+                async with client.transaction():
+                    session = await client.sessions.fetch_by_id(request.auth.session)
+                    email = request.auth.subject
+                if not session:
+                    raise ClientException()
+            elif isinstance(request.auth, (models.Email, models.Code)):
+                async with client.transaction():
+                    session = await client.sessions.create(
+                        models.Session(
+                            host=request.client.host, agent=agent, user=request.user
+                        ),
+                        refresh=True,
+                    )
+                    email = (
+                        request.auth.id
+                        if isinstance(request.auth, models.Email)
+                        else request.auth.email.id
+                    )
+            else:
+                # TODO: add www-authenticate header.
+                raise NotAuthorizedException()
+            result = schemas.Token.create(
+                session, email, request.url.hostname, request.url.hostname
+            )
+            return schemas.Resource(
+                result.encode(),
+            )

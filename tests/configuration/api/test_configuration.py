@@ -43,7 +43,7 @@ async def test_overwriting_defaults(environment: None) -> None:
     configuration = Configuration(
         cli=cli,
     )
-    assert configuration.mode == "test"
+    assert configuration.mode == "dev"
     assert configuration.api.password_pepper == ""
     assert private_pattern.search(configuration.api.jwt_private_key)
     assert public_pattern.search(configuration.api.jwt_public_key)
@@ -53,7 +53,7 @@ def test_defaults(environment: None) -> None:
     os.environ.clear()
     cli = {}
     configuration = Configuration(cli=cli)
-    assert configuration.mode == "test"
+    assert configuration.mode == "dev"
     assert private_pattern.search(configuration.api.jwt_private_key)
     assert public_pattern.search(configuration.api.jwt_public_key)
     assert configuration.api.password_pepper == ""

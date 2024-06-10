@@ -7,5 +7,6 @@ class Claims:
     issuer = "iss"
     subject = "sub"
     session = "sid"
+    secure = "sec"
     issued = "iat"
     expires = "exp"

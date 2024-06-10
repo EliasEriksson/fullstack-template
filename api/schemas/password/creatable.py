@@ -1,11 +1,14 @@
 from __future__ import annotations
-from typing import *
-from . import password
+from .password import Password
+from ...database import models
 
 
-class CreatableProtocol(password.PasswordProtocol, Protocol):
+class Creatable(Password):
     repeat: str
 
+    def to_model(self) -> models.Password:
+        return models.Password(digest=models.Password.hash(self.password))
 
-class Creatable(password.Password):
-    repeat: str
+    def validate(self) -> None:
+        if self.password != self.repeat:
+            raise ValueError("Passwords not matching.")

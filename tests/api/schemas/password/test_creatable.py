@@ -1,17 +1,19 @@
-from api.schemas import password as schemas
+from api import schemas
+import msgspec
+import json
 
 
-class Password:
-    password: str
-    repeat: str
-
-    def __init__(self, password: str, repeat: str) -> None:
-        self.password = password
-        self.repeat = repeat
-
-
-def test_from_object() -> None:
-    password = Password("password", "password")
-    assert isinstance(
-        schemas.creatable.Creatable.from_object(password), schemas.creatable.Creatable
+async def test_creatable() -> None:
+    msgspec.json.decode(
+        json.dumps({"password": "asd123", "repeat": "asd123"}).encode("utf-8"),
+        type=schemas.password.Creatable,
     )
+    try:
+        msgspec.json.decode(
+            json.dumps({"password": "asd123", "repeat": "asd1234"}).encode("utf-8"),
+            type=schemas.password.Creatable,
+        )
+    except msgspec.ValidationError:
+        pass
+    else:
+        raise Exception("Validation should fail.")

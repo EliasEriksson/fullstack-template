@@ -1,11 +1,16 @@
 from litestar import Router
 from litestar.middleware.base import DefineMiddleware
-from .auth.middlewares import BearerAuthentication
-from . import users
+from api.middlewares.authentication import Authentication
+from api.middlewares.authentication import JwtAuthentication
 from . import auth
+from . import emails
 
 router = Router(
     path="api",
-    route_handlers=[users.router, auth.router],
-    middleware=[DefineMiddleware(BearerAuthentication, exclude="/auth")],
+    route_handlers=[auth.router, emails.router],
+    middleware=[
+        DefineMiddleware(
+            Authentication, JwtAuthentication(), exclude=["/auth", "/emails"]
+        )
+    ],
 )
