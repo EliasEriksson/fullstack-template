@@ -1,6 +1,6 @@
 # Fullstack template
 
-postgres, python + litestar, TypeScript + Next.js
+postgres, python + litestar, TypeScript + Next.js (planned)
 
 ## Dependencies
 
@@ -21,14 +21,6 @@ postgres, python + litestar, TypeScript + Next.js
 * pytest
 * pytest-asyncio
 * click
-
-* [click](https://pypi.org/project/click/)
-* [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)
-* [pytest](https://pypi.org/project/pytest/)
-* [pytest-asyncio](https://pypi.org/project/pytest-asyncio/)
-* [psycopg](https://pypi.org/project/psycopg/)
-* [black](https://pypi.org/project/black/)
-* [alembic](https://pypi.org/project/alembic/)
 
 ## Setup
 
@@ -133,54 +125,3 @@ try to implement support for it rather than calling alembic manually.
    python main.py database migrate
    ```
 
-## Roadmap
-
-### Backend
-
-- [x] implement postgres
-    - [x] change uuid id to server default
-    - [x] setup database tests to be able to use postgres
-        * dynamic connection string
-    - [x] setup CI to be able to use postgres
-        * [more reading...](https://medium.com/qest/database-for-ci-cd-tests-quickly-and-inexpensively-96e3116ce72f)
-        * [even more reading...](https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers)
-- [x] install and setup [alembic](https://alembic.sqlalchemy.org/en/latest/)
-    - [x] call alembic from cli script
-        - alembic internal commands api [docs](https://alembic.sqlalchemy.org/en/latest/api/commands.html)
-        - some [SO thread](https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code)
-- [x] lite-start hello world
-- [x] database abstraction
-- [x] user CRUD
-- [x] storing passwords
-- [x] authentication
-- [x] issue JWTs
-- [x] `GET /auth`
-- [x] setup postman
-    * [workspace](https://www.postman.com/eliaseriksson/workspace/eliaseriksson-fullstack-template/overview)
-- [x] creating other users
-- [x] patching other users
-- [x] fully remove self
-- [x] fully remove other user
-- [ ] multiple email addresses per user
-- [ ] refactor exceptions
-- [ ] refactor to top folders backend / frontend / cli / static?
-- [ ] catch server errors
-    * creating the same user
-- [ ] permissions
-- [ ] roles
-- [ ] cli to create users
-- [ ] creating invites
-    * accepted via `POST /auth/:invite` to create a new user with the invite
-- [ ] configuration to disable `POST /auth`
-- [ ] deactivate self?
-- [ ] deactivate user?
-    * make password nullable?
-    * make active column?
-    * password hash of 0 bytes?
-- [ ] test all endpoints
-- [ ] add docstrings to functions and methods
-- [ ] email verification?
-
-### Frontend
-
-- [ ] admin CRUD page
