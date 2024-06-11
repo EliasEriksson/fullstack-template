@@ -1,6 +1,6 @@
-from configuration.variables import Variables
-from configuration.api.variables import Variables as ApiVariables
-from configuration.database.variables import Variables as DatabaseVariables
+from api.configuration.variables import Variables
+from api.configuration.api.variables import Variables as ApiVariables
+from api.configuration.database.variables import Variables as DatabaseVariables
 from functools import reduce
 import click
 

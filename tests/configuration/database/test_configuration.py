@@ -1,8 +1,8 @@
 import os
-from configuration import Configuration
+from api.configuration import Configuration
+from api.configuration.variables import Variables as ConfigurationVariables
+from api.configuration.database.variables import Variables
 from ..conftest import environment
-from configuration.variables import Variables as ConfigurationVariables
-from configuration.database.variables import Variables
 
 
 async def test_defaults_dev(environment: None) -> None:

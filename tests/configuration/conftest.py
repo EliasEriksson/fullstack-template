@@ -1,4 +1,4 @@
-from configuration import Configuration
+from api.configuration import Configuration
 import os
 import pytest
 

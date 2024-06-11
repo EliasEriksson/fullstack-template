@@ -1,5 +1,5 @@
 import pytest
-from configuration import Configuration
+from api.configuration import Configuration
 from api.database import Database
 
 

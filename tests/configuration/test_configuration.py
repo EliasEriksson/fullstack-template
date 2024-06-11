@@ -1,6 +1,6 @@
 import os
-from configuration import Configuration
-from configuration.variables import Variables
+from api.configuration import Configuration
+from api.configuration.variables import Variables
 from .conftest import environment
 
 

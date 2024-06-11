@@ -1,6 +1,6 @@
 from __future__ import annotations
-from configuration.environment.types import TEnvironment
-from configuration import Configuration
+from api.configuration.environment.types import TEnvironment
+from api.configuration import Configuration
 from .options import configuration_options
 import uvicorn
 import click

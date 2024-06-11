@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import *
 from datetime import datetime
 from datetime import timedelta
-from configuration import Configuration
+from api.configuration import Configuration
 from .claims import Claims
 from .algorithms import Algorithms
 from .exceptions import TokenEncodeException

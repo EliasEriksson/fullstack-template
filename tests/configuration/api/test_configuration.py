@@ -1,7 +1,7 @@
 import os
 
-from configuration import Configuration
-from configuration.api.variables import Variables
+from api.configuration import Configuration
+from api.configuration.api.variables import Variables
 from pathlib import Path
 import re
 from ..conftest import environment
