@@ -8,7 +8,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from bcrypt import checkpw
-from shared import hash
+from api.shared import hash
 from .base import Base
 from ..constants import Lazy
 from ..constants import CASCADE

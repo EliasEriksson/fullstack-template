@@ -1,4 +1,4 @@
-from shared.dependency.exceptions import DependencyNotFoundError
+from api.shared.dependency.exceptions import DependencyNotFoundError
 from api.services.email import Email
 from api.services.email.local import Local
 

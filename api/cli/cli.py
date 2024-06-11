@@ -30,5 +30,5 @@ def test(**environment: TEnvironment):
         },
     )
     print("Starting in mode:", configuration.mode)
-    return_code = subprocess.call(["pytest", "--asyncio-mode", "auto", "tests"])
+    return_code = subprocess.call(["pytest", "--asyncio-mode", "auto", "api/tests"])
     sys.exit(return_code)

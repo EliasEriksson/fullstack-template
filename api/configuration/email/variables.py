@@ -1,4 +1,4 @@
-from shared.iterable import Iterable
+from api.shared.iterable import Iterable
 
 
 class Variables(Iterable):

@@ -3,7 +3,7 @@ from typing import *
 from abc import ABC
 from api.configuration import Configuration
 from abc import abstractmethod
-from shared.dependency.exceptions import DependencyNotFoundError
+from api.shared.dependency.exceptions import DependencyNotFoundError
 
 
 class Email(ABC):
