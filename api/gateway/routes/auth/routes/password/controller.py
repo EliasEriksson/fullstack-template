@@ -15,8 +15,8 @@ from api.database import Database
 from api.database import models
 from api.database.exceptions import IntegrityError
 from api import schemas
-from api.middlewares.authentication import Authentication
-from api.middlewares.authentication import JwtAuthentication
+from api.gateway.middlewares.authentication import Authentication
+from api.gateway.middlewares.authentication import JwtAuthentication
 from api.services.email import Email
 
 
@@ -46,6 +46,7 @@ class Controller(LitestarController):
                 try:
                     password = data.to_model()
                     password.user = request.user
+                    await client.passwords.invalidate_by_email(request.auth.subject)
                     await client.passwords.create(password)
                 except IntegrityError as error:
                     raise ClientException("Already have a password.") from error
@@ -107,6 +108,7 @@ class Controller(LitestarController):
         self,
         request: Request[models.User, schemas.Token, Any],
     ) -> None:
+        # TODO: remove requirement of authentication for password reset
         async with Database() as client:
             async with client.transaction():
                 code = await client.codes.create(

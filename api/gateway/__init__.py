@@ -13,7 +13,7 @@ class DocumentationController(OpenAPIController):
     favicon_url = "/static/favicon.png"
 
 
-api = Litestar(
+gateway = Litestar(
     route_handlers=[routes.router],
     static_files_config=[
         StaticFilesConfig(
