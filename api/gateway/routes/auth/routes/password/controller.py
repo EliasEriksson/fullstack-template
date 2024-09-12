@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import asyncio
 from typing import *
 from litestar import Controller as LitestarController
@@ -29,6 +28,7 @@ authentication = DefineMiddleware(
 class Controller(LitestarController):
     path = "/password"
 
+    # TODO: can be created multiple times?
     @post(
         path="/",
         tags=["auth"],
@@ -46,7 +46,7 @@ class Controller(LitestarController):
                 try:
                     password = data.to_model()
                     password.user = request.user
-                    await client.passwords.invalidate_by_email(request.auth.subject)
+                    await client.passwords.invalidate_by_email_id(request.auth.subject)
                     await client.passwords.create(password)
                 except IntegrityError as error:
                     raise ClientException("Already have a password.") from error
@@ -77,7 +77,7 @@ class Controller(LitestarController):
     ) -> schemas.Resource[str]:
         async with Database() as client:
             async with client.transaction():
-                passwords = await client.passwords.fetch_valid_passwords(request.user)
+                passwords = await client.passwords.list_valid_passwords(request.user)
             if not next(
                 (password for password in passwords if password.verify(data.old)), None
             ):

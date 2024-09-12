@@ -56,6 +56,8 @@ class Authentication(AbstractAuthenticationMiddleware):
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
         authorization = connection.headers.get(Headers.authorization)
+        if authorization is None:
+            raise self.not_authorized(connection.url)
         for strategy in self.strategies:
             if strategy.processable(authorization):
                 try:
@@ -173,6 +175,5 @@ class OtacAuthentication(Strategy):
                 raise NotAuthorizedException()
             async with client.transaction():
                 code.email.verified = True
-                await client.passwords.invalidate_by_email(code.email.address)
                 await client.codes.delete_by_user_id(code.email.user_id)
         return AuthenticationResult(user=code.email.user, auth=code)
