@@ -16,6 +16,7 @@ from api.database.exceptions import IntegrityError
 from api import schemas
 from api.gateway.middlewares.authentication import Authentication
 from api.gateway.middlewares.authentication import JwtAuthentication
+from api.gateway.middlewares.authentication import IgnoreAuthentication
 from api.services.email import Email
 
 
@@ -102,19 +103,16 @@ class Controller(LitestarController):
     @delete(
         path="",
         tags=["auth"],
-        middleware=[authentication],
+        middleware=[DefineMiddleware(IgnoreAuthentication)],
     )
-    async def delete(
-        self,
-        request: Request[models.User, schemas.Token, Any],
-    ) -> None:
-        # TODO: remove requirement of authentication for password reset
+    async def delete(self, data: schemas.password.Deletable) -> None:
+        # TODO: make sure the password is actually deleted if this OTAC is used.
+        # TODO: logging in with search param ?reset=true should reset pw?
         async with Database() as client:
             async with client.transaction():
-                code = await client.codes.create(
-                    models.Code(email_id=request.auth.subject)
-                )
-                email = await client.emails.fetch_by_id(request.auth.subject)
+                email = await client.emails.fetch_by_address(data.email)
+            async with client.transaction():
+                code = await client.codes.create(models.Code(email_id=email.id))
             mailer = Email()
             asyncio.ensure_future(
                 mailer.send_text(

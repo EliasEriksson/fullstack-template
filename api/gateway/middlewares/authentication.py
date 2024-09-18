@@ -33,6 +33,13 @@ class Strategy(ABC):
     ) -> AuthenticationResult: ...
 
 
+class IgnoreAuthentication(AbstractAuthenticationMiddleware):
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        return AuthenticationResult(user=None, auth=None)
+
+
 class Authentication(AbstractAuthenticationMiddleware):
     strategies: list[Strategy]
 
