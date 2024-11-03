@@ -22,6 +22,7 @@ class Password(CRUD[models.Password]):
         return cast(int, result.rowcount)
 
     async def delete_by_email(self, email: UUID) -> int:
+        # TODO email here might be of wrong type
         query = delete(models.Password).where(
             models.Password.user_id
             == select(models.User.id)
