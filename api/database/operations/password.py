@@ -14,6 +14,16 @@ class Password(CRUD[models.Password]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, models.Password)
 
+    async def fetch_by_email(self, email: UUID) -> models.Password | None:
+        query = (
+            select(models.Password)
+            .join(models.User)
+            .join(models.Email)
+            .where(cast(ColumnElement, models.Email.id == email))
+        )
+        result = await self._session.execute(query)
+        return result.scalars().one_or_none()
+
     async def delete_by_user(self, user: UUID) -> int:
         query = delete(models.Password).where(
             cast(ColumnElement, models.User.id == user)
@@ -23,11 +33,12 @@ class Password(CRUD[models.Password]):
 
     async def delete_by_email(self, email: UUID) -> int:
         # TODO email here might be of wrong type
+
         query = delete(models.Password).where(
             models.Password.user_id
             == select(models.User.id)
-            .join(models.User.emails)
-            .where(cast(ColumnElement, models.Email.address == email))
+            .join(models.Email)
+            .where(cast(ColumnElement, models.Email.id == email))
             .scalar_subquery()
         )
         result = await self._session.execute(query)

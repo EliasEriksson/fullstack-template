@@ -180,7 +180,7 @@ class OtacAuthentication(Strategy):
             if not code:
                 raise NotAuthorizedException()
             async with client.transaction():
-                code.email.verified = True
-                await client.passwords.delete_by_email(code.email.address)
-                await client.codes.delete_by_user_id(code.email.user_id)
+                if code.reset_password:
+                    await client.password.delete_by_email(code.email.id)
+                # await client.codes.delete_by_user_id(code.email.user_id)
         return AuthenticationResult(user=code.email.user, auth=code)

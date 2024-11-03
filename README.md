@@ -128,7 +128,7 @@ try to implement support for it rather than calling alembic manually.
 ## Endpoints
 * `POST /auth` \
   Creates a new user without a password and sends an email with an OTAC that can be used by `GET /auth` 
-  to acquire a jwt.
+  to acquire a jwt. If user already exists it only generates an OTAC and emails it.
 * `GET /auth` \
   Used to acquire a JWT. 
 * `POST /auth/password` \

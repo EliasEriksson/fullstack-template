@@ -11,7 +11,7 @@ class Client:
     _session: AsyncSession
     users: Users
     emails: Emails
-    passwords: Password
+    password: Password
     sessions: Sessions
     codes: Codes
 
@@ -19,7 +19,7 @@ class Client:
         self._session = session
         self.users = Users(session)
         self.emails = Emails(session)
-        self.passwords = Password(session)
+        self.password = Password(session)
         self.sessions = Sessions(session)
         self.codes = Codes(session)
 

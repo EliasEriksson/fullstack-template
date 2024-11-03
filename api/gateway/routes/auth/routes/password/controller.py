@@ -9,10 +9,10 @@ from litestar import post
 from litestar import put
 from litestar import delete
 from litestar.exceptions import ClientException
+from sqlalchemy.exc import IntegrityError
 from api.headers import Headers
 from api.database import Database
 from api.database import models
-from api.database.exceptions import IntegrityError
 from api import schemas
 from api.gateway.middlewares.authentication import Authentication
 from api.gateway.middlewares.authentication import JwtAuthentication
@@ -43,17 +43,16 @@ class Controller(LitestarController):
         data: schemas.password.Creatable,
     ) -> schemas.Resource[str]:
         async with Database() as client:
-            async with client.transaction():
-                try:
+            try:
+                async with client.transaction():
                     password = data.to_model()
                     password.user = request.user
-                    await client.passwords.delete_by_email(request.auth.subject)
-                    await client.passwords.create(password)
-                except IntegrityError as error:
-                    raise ClientException("Already have a password.") from error
-                session = await client.sessions.fetch_by_connection(
-                    request.user, request.client.host, agent
-                )
+                    await client.password.create(password)
+                    session = await client.sessions.fetch_by_connection(
+                        request.user, request.client.host, agent
+                    )
+            except IntegrityError as error:
+                raise ClientException("Already have a password.") from error
             async with client.transaction():
                 session.refresh()
             result = schemas.Token.create(
@@ -78,16 +77,14 @@ class Controller(LitestarController):
     ) -> schemas.Resource[str]:
         async with Database() as client:
             async with client.transaction():
-                passwords = await client.passwords.list_valid_passwords(request.user)
-            if not next(
-                (password for password in passwords if password.verify(data.old)), None
-            ):
-                raise ClientException()
+                password = await client.password.fetch_by_email(request.auth.subject)
+                if not password or not password.verify(data.old):
+                    raise ClientException()
             async with client.transaction():
-                await client.passwords.delete_by_user(request.user.id)
+                await client.password.delete_by_user(request.user.id)
                 password = data.to_model()
                 password.user_id = request.user.id
-                await client.passwords.create(password)
+                await client.password.create(password)
                 session = await client.sessions.fetch_by_id(request.auth.session)
             if not session:
                 raise ClientException()
@@ -106,13 +103,19 @@ class Controller(LitestarController):
         middleware=[DefineMiddleware(IgnoreAuthentication)],
     )
     async def delete(self, data: schemas.password.Deletable) -> None:
-        # TODO: make sure the password is actually deleted if this OTAC is used.
-        # TODO: logging in with search param ?reset=true should reset pw?
         async with Database() as client:
             async with client.transaction():
                 email = await client.emails.fetch_by_address(data.email)
+            if not email:
+                return None
             async with client.transaction():
-                code = await client.codes.create(models.Code(email_id=email.id))
+                if email.code:
+                    code = email.code.regenerate(reset_password=True)
+                else:
+                    code = await client.codes.create(
+                        models.Code(email_id=email.id, reset_password=True)
+                    )
+
             mailer = Email()
             asyncio.ensure_future(
                 mailer.send_text(

@@ -7,11 +7,12 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy import String
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime
 from .base import Base
 from ..constants import Lazy
 from ..constants import CASCADE
-from ..constants import Cascades
 from uuid import UUID
+from datetime import datetime
 
 if TYPE_CHECKING:
     from . import Email
@@ -32,8 +33,15 @@ class Code(Base):
     email_id: Mapped[UUID] = mapped_column(
         ForeignKey("email.id", ondelete=CASCADE),
         nullable=False,
+        unique=True,
     )
     email: Mapped[Email] = relationship(
         back_populates="code",
         lazy=Lazy.default(),
     )
+
+    def regenerate(self, *, reset_password: bool) -> Code:
+        self.token = secrets.token_urlsafe(self.size)
+        self.reset_password = reset_password
+        self.modified = cast(DateTime, datetime.now())
+        return self

@@ -51,10 +51,19 @@ class Controller(LitestarController):
         async with Database() as client:
             try:
                 async with client.transaction():
-                    user, email, code = data.create(False)
+                    user, email, code = data.create()
                     await client.users.create(user)
-            except IntegrityError as error:
-                raise ClientException("Email already in use.") from error
+            except IntegrityError:
+                async with client.transaction():
+                    email = await client.emails.fetch_by_address(data.email)
+                    if email.code:
+                        await client.codes.update(
+                            email.code.regenerate(reset_password=False)
+                        )
+                    else:
+                        await client.codes.create(
+                            models.Code(email=email, reset_password=False)
+                        )
         mailer = Email()
         asyncio.ensure_future(
             mailer.send_text(
@@ -86,6 +95,7 @@ class Controller(LitestarController):
                 if not session:
                     raise ClientException()
             elif isinstance(request.auth, (models.Email, models.Code)):
+                # TODO the password is not properly deleted if PW reset OTAC is used.
                 async with client.transaction():
                     session = await client.sessions.create(
                         models.Session(

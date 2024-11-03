@@ -6,9 +6,7 @@ from ...database import models
 class Creatable(Schema):
     email: str
 
-    def create(
-        self, reset_password: bool
-    ) -> tuple[models.User, models.Email, models.Code]:
+    def create(self) -> tuple[models.User, models.Email, models.Code]:
         user = models.User()
         email = models.Email(
             address=self.email,
@@ -16,6 +14,6 @@ class Creatable(Schema):
         )
         code = models.Code(
             email=email,
-            reset_password=reset_password,
+            reset_password=False,
         )
         return user, email, code
