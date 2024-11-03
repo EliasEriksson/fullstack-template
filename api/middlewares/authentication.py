@@ -140,9 +140,8 @@ class PasswordAuthentication(Strategy):
                 email = await client.emails.fetch_by_address(email)
             if not email:
                 raise NotAuthorizedException()
-            for password_model in email.user.passwords:
-                if password_model.verify(password):
-                    return AuthenticationResult(user=email.user, auth=email)
+            if email.user.password.verify(password):
+                return AuthenticationResult(user=email.user, auth=email)
         raise NotAuthorizedException()
 
 
@@ -173,6 +172,6 @@ class OtacAuthentication(Strategy):
                 raise NotAuthorizedException()
             async with client.transaction():
                 code.email.verified = True
-                await client.passwords.invalidate_by_email(code.email.address)
+                await client.passwords.delete_by_email(code.email.address)
                 await client.codes.delete_by_user_id(code.email.user_id)
         return AuthenticationResult(user=code.email.user, auth=code)

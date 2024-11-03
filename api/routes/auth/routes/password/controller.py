@@ -82,7 +82,7 @@ class Controller(LitestarController):
             ):
                 raise ClientException()
             async with client.transaction():
-                await client.passwords.invalidate_by_user(request.user.id)
+                await client.passwords.delete_by_user(request.user.id)
                 password = data.to_model()
                 password.user_id = request.user.id
                 await client.passwords.create(password)

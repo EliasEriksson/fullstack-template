@@ -5,6 +5,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy import String
+from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from .base import Base
 from ..constants import Lazy
@@ -21,6 +22,10 @@ class Code(Base):
     token: Mapped[str] = mapped_column(
         String(),
         default=lambda: secrets.token_urlsafe(Code.size),
+        nullable=False,
+    )
+    reset_password: Mapped[bool] = mapped_column(
+        Boolean(),
         nullable=False,
     )
     email_id: Mapped[str] = mapped_column(

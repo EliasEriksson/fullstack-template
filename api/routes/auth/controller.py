@@ -51,7 +51,7 @@ class Controller(LitestarController):
         async with Database() as client:
             try:
                 async with client.transaction():
-                    user, email, code = data.create()
+                    user, email, code = data.create(False)
                     await client.users.create(user)
             except IntegrityError as error:
                 raise ClientException("Email already in use.") from error

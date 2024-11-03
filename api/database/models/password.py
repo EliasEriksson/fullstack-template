@@ -31,9 +31,10 @@ class Password(Base):
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("user.id", ondelete=CASCADE),
         nullable=False,
+        unique=True,
     )
     user: Mapped[User] = relationship(
-        back_populates="passwords",
+        back_populates="password",
         lazy=Lazy.default(),
     )
 

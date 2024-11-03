@@ -24,7 +24,7 @@ class User(Base):
         cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),
     )
-    passwords: Mapped[list[Password]] = relationship(
+    password: Mapped[Password] = relationship(
         back_populates="user",
         cascade=Cascades.default(Cascades.delete_orphan),
         lazy=Lazy.default(),

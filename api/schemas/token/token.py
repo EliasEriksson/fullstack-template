@@ -24,7 +24,7 @@ class PasswordProtocol(Protocol):
 
 class UserProtocol(Protocol):
     id: UUID
-    passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
+    password: PasswordProtocol | Mapped[PasswordProtocol] | None
 
 
 class SessionProtocol(Protocol):
@@ -130,7 +130,7 @@ class Token(Schema):
             audience=str(audience),
             subject=email,
             session=session.id,
-            secure=len(session.user.passwords) > 0,
+            secure=session.user.password is not None,
             issued=now,
             expires=cls._expires(now),
         )
