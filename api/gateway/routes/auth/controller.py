@@ -10,13 +10,13 @@ from litestar.middleware.base import DefineMiddleware
 from litestar.exceptions import ClientException
 from litestar.exceptions import NotAuthorizedException
 from api.database import Database
-from ...database import models
+from api.database import models
 from sqlalchemy.exc import IntegrityError
-from ... import schemas
-from api.middlewares.authentication import Authentication
-from api.middlewares.authentication import PasswordAuthentication
-from api.middlewares.authentication import OtacAuthentication
-from api.middlewares.authentication import JwtAuthentication
+from api import schemas
+from api.gateway.middlewares.authentication import Authentication
+from api.gateway.middlewares.authentication import PasswordAuthentication
+from api.gateway.middlewares.authentication import OtacAuthentication
+from api.gateway.middlewares.authentication import JwtAuthentication
 from api.headers import Headers
 from api.services.email import Email
 

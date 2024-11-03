@@ -2,6 +2,7 @@ from __future__ import annotations
 from api.configuration.environment.types import TEnvironment
 from api.configuration import Configuration
 from .options import configuration_options
+from pathlib import Path
 import uvicorn
 import click
 
@@ -15,7 +16,7 @@ def start(**environment: TEnvironment) -> None:
     configuration = Configuration(cli=environment)
     print("Starting in mode:", configuration.mode)
     uvicorn.run(
-        "api:api",
+        f"{Path(__file__).parent.parent.name}.gateway:gateway",
         port=configuration.api.port,
         log_level="info",
         reload=configuration.mode == "dev",

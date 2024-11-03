@@ -11,6 +11,7 @@ from .base import Base
 from ..constants import Lazy
 from ..constants import CASCADE
 from ..constants import Cascades
+from uuid import UUID
 
 if TYPE_CHECKING:
     from . import Email
@@ -28,7 +29,7 @@ class Code(Base):
         Boolean(),
         nullable=False,
     )
-    email_id: Mapped[str] = mapped_column(
+    email_id: Mapped[UUID] = mapped_column(
         ForeignKey("email.id", ondelete=CASCADE),
         nullable=False,
     )

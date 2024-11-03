@@ -33,6 +33,13 @@ class Strategy(ABC):
     ) -> AuthenticationResult: ...
 
 
+class IgnoreAuthentication(AbstractAuthenticationMiddleware):
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
+        return AuthenticationResult(user=None, auth=None)
+
+
 class Authentication(AbstractAuthenticationMiddleware):
     strategies: list[Strategy]
 
@@ -56,6 +63,8 @@ class Authentication(AbstractAuthenticationMiddleware):
         self, connection: ASGIConnection
     ) -> AuthenticationResult:
         authorization = connection.headers.get(Headers.authorization)
+        if authorization is None:
+            raise self.not_authorized(connection.url)
         for strategy in self.strategies:
             if strategy.processable(authorization):
                 try:

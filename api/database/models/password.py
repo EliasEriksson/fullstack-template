@@ -23,11 +23,6 @@ class Password(Base):
         LargeBinary(),
         nullable=False,
     )
-    valid: Mapped[bool] = mapped_column(
-        Boolean(),
-        default=True,
-        nullable=False,
-    )
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("user.id", ondelete=CASCADE),
         nullable=False,

@@ -6,8 +6,8 @@ from litestar.middleware import DefineMiddleware
 from litestar import Request
 from litestar import get
 from litestar.exceptions import NotFoundException
-from api.middlewares.authentication import Authentication
-from api.middlewares.authentication import JwtAuthentication
+from api.gateway.middlewares.authentication import Authentication
+from api.gateway.middlewares.authentication import JwtAuthentication
 from api import schemas
 from api.exceptions import ForbiddenException
 from api.database import Database

@@ -1,7 +1,7 @@
 from litestar import Router
 from litestar.middleware.base import DefineMiddleware
-from api.middlewares.authentication import Authentication
-from api.middlewares.authentication import JwtAuthentication
+from api.gateway.middlewares.authentication import Authentication
+from api.gateway.middlewares.authentication import JwtAuthentication
 from . import auth
 from . import emails
 
