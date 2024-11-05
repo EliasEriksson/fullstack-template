@@ -1,5 +1,5 @@
 from __future__ import annotations
-from configuration import Configuration
+from api.configuration import Configuration
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession

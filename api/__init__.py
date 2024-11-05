@@ -1,2 +1,2 @@
-from .api import api
+from .gateway import gateway
 from . import schemas

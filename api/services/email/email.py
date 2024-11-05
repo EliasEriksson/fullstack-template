@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import *
 from abc import ABC
-from configuration import Configuration
+from api.configuration import Configuration
 from abc import abstractmethod
-from shared.dependency.exceptions import DependencyNotFoundError
+from api.shared.dependency.exceptions import DependencyNotFoundError
 
 
 class Email(ABC):

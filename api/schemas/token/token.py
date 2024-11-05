@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import *
 from datetime import datetime
 from datetime import timedelta
-from configuration import Configuration
+from api.configuration import Configuration
 from .claims import Claims
 from .algorithms import Algorithms
 from .exceptions import TokenEncodeException
@@ -24,7 +24,7 @@ class PasswordProtocol(Protocol):
 
 class UserProtocol(Protocol):
     id: UUID
-    passwords: list[PasswordProtocol] | Mapped[list[PasswordProtocol]]
+    password: PasswordProtocol | Mapped[PasswordProtocol] | None
 
 
 class SessionProtocol(Protocol):
@@ -130,7 +130,7 @@ class Token(Schema):
             audience=str(audience),
             subject=email,
             session=session.id,
-            secure=len(session.user.passwords) > 0,
+            secure=getattr(session.user, "password", None) is not None,
             issued=now,
             expires=cls._expires(now),
         )

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from cli import cli
+from api.cli import cli
 import os
 from pathlib import Path
 

@@ -8,7 +8,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from bcrypt import checkpw
-from shared import hash
+from api.shared import hash
 from .base import Base
 from ..constants import Lazy
 from ..constants import CASCADE
@@ -23,17 +23,13 @@ class Password(Base):
         LargeBinary(),
         nullable=False,
     )
-    valid: Mapped[bool] = mapped_column(
-        Boolean(),
-        default=True,
-        nullable=False,
-    )
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("user.id", ondelete=CASCADE),
         nullable=False,
+        unique=True,
     )
     user: Mapped[User] = relationship(
-        back_populates="passwords",
+        back_populates="password",
         lazy=Lazy.default(),
     )
 

@@ -14,5 +14,6 @@ class Creatable(Schema):
         )
         code = models.Code(
             email=email,
+            reset_password=False,
         )
         return user, email, code
