@@ -22,12 +22,6 @@ from api.gateway.middlewares.authentication import OtacAuthentication
 from api.services.email import Email
 
 
-jwt_authentication = DefineMiddleware(
-    Authentication,
-    JwtAuthentication(),
-)
-
-
 class Controller(LitestarController):
     path = "/password"
 
@@ -88,7 +82,7 @@ class Controller(LitestarController):
     @put(
         path="",
         tags=["auth"],
-        middleware=[jwt_authentication],
+        middleware=[DefineMiddleware(Authentication, JwtAuthentication())],
     )
     async def set(
         self,
