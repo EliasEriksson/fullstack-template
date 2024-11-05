@@ -1,11 +1,11 @@
 from __future__ import annotations
-
-import asyncio
+from typing import *
 from abc import ABC, abstractmethod
 import re
 import math
 from datetime import datetime
 from datetime import timezone
+from datetime import timedelta
 from base64 import b64decode
 from litestar.datastructures.url import URL
 from litestar.exceptions import NotAuthorizedException
@@ -181,9 +181,13 @@ class OtacAuthentication(Strategy):
                 code = await client.codes.fetch_by_token(token)
             if not code:
                 raise NotAuthorizedException()
-            if code.reset_password:
+            if code.expired:
                 async with client.transaction():
+                    await client.codes.delete(code)
+                raise NotAuthorizedException("expired.")
+            async with client.transaction():
+                if code.reset_password:
                     await client.password.delete_by_email(code.email.id)
                     await client.refresh(code.email.user)
-                    await client.codes.delete_by_user_id(code.email.user_id)
+                await client.codes.delete(code)
         return AuthenticationResult(user=code.email.user, auth=code)

@@ -6,22 +6,23 @@ from sqlalchemy import Uuid
 from sqlalchemy import DateTime
 from sqlalchemy import text
 from sqlalchemy import func
-import uuid
+from datetime import datetime
+from uuid import UUID
 
 
 class Base(AsyncAttrs, DeclarativeBase):
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True, native_uuid=True),
         primary_key=True,
         nullable=False,
         server_default=text("gen_random_uuid()"),
     )
-    created: Mapped[DateTime] = mapped_column(
+    created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
-    modified: Mapped[DateTime] = mapped_column(
+    modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),

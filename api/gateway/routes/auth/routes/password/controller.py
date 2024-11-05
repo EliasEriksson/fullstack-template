@@ -9,6 +9,7 @@ from litestar import post
 from litestar import put
 from litestar import delete
 from litestar.exceptions import ClientException
+from litestar.exceptions import NotAuthorizedException
 from sqlalchemy.exc import IntegrityError
 from api.headers import Headers
 from api.database import Database
@@ -17,10 +18,11 @@ from api import schemas
 from api.gateway.middlewares.authentication import Authentication
 from api.gateway.middlewares.authentication import JwtAuthentication
 from api.gateway.middlewares.authentication import IgnoreAuthentication
+from api.gateway.middlewares.authentication import OtacAuthentication
 from api.services.email import Email
 
 
-authentication = DefineMiddleware(
+jwt_authentication = DefineMiddleware(
     Authentication,
     JwtAuthentication(),
 )
@@ -34,14 +36,24 @@ class Controller(LitestarController):
         path="/",
         tags=["auth"],
         summary="Create password.",
-        middleware=[DefineMiddleware(Authentication, JwtAuthentication(secure=False))],
+        middleware=[
+            DefineMiddleware(
+                Authentication, JwtAuthentication(secure=False), OtacAuthentication()
+            )
+        ],
     )
     async def create(
         self,
-        request: Request[models.User, schemas.Token, Any],
+        request: Request[models.User, schemas.Token | models.Code, Any],
         agent: Annotated[str, Parameter(header=Headers.user_agent)],
         data: schemas.password.Creatable,
     ) -> schemas.Resource[str]:
+        if isinstance(request.auth, schemas.Token):
+            email = request.auth.subject
+        else:
+            if not request.auth.reset_password:
+                raise NotAuthorizedException()
+            email = request.auth.email.id
         async with Database() as client:
             try:
                 async with client.transaction():
@@ -57,7 +69,7 @@ class Controller(LitestarController):
                 session.refresh()
             result = schemas.Token.create(
                 session,
-                request.auth.subject,
+                email,
                 request.url.hostname,
                 request.url.hostname,
             )
@@ -68,7 +80,7 @@ class Controller(LitestarController):
     @put(
         path="",
         tags=["auth"],
-        middleware=[authentication],
+        middleware=[jwt_authentication],
     )
     async def set(
         self,

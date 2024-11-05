@@ -7,12 +7,12 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy import String
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
-from sqlalchemy import DateTime
 from .base import Base
 from ..constants import Lazy
 from ..constants import CASCADE
 from uuid import UUID
 from datetime import datetime
+from datetime import timedelta
 
 if TYPE_CHECKING:
     from . import Email
@@ -40,8 +40,12 @@ class Code(Base):
         lazy=Lazy.default(),
     )
 
+    @property
+    def expired(self) -> bool:
+        return datetime.now(self.modified.tzinfo) - self.modified > timedelta(minutes=2)
+
     def regenerate(self, *, reset_password: bool) -> Code:
         self.token = secrets.token_urlsafe(self.size)
         self.reset_password = reset_password
-        self.modified = cast(DateTime, datetime.now())
+        self.modified = datetime.now()
         return self
