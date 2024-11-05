@@ -130,7 +130,7 @@ class Token(Schema):
             audience=str(audience),
             subject=email,
             session=session.id,
-            secure=session.user.password is not None,
+            secure=getattr(session.user, "password", None) is not None,
             issued=now,
             expires=cls._expires(now),
         )
