@@ -103,11 +103,11 @@ class Controller(LitestarController):
                         ),
                         refresh=True,
                     )
-                    email = (
-                        request.auth.id
-                        if isinstance(request.auth, models.Email)
-                        else request.auth.email.id
-                    )
+                email = (
+                    request.auth.id
+                    if isinstance(request.auth, models.Email)
+                    else request.auth.email.id
+                )
             else:
                 # TODO: add www-authenticate header.
                 raise NotAuthorizedException()

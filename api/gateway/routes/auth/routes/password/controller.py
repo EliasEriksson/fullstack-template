@@ -61,9 +61,9 @@ class Controller(LitestarController):
                 request.url.hostname,
                 request.url.hostname,
             )
-            return schemas.Resource(
-                result.encode(),
-            )
+        return schemas.Resource(
+            result.encode(),
+        )
 
     @put(
         path="",

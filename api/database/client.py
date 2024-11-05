@@ -23,5 +23,8 @@ class Client:
         self.sessions = Sessions(session)
         self.codes = Codes(session)
 
+    async def refresh(self, *args, **kwargs):
+        await self._session.refresh(*args, **kwargs)
+
     def transaction(self) -> AsyncSessionTransaction:
         return self._session.begin()

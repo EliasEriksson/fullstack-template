@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import asyncio
 from abc import ABC, abstractmethod
 import re
 import math
@@ -179,8 +181,9 @@ class OtacAuthentication(Strategy):
                 code = await client.codes.fetch_by_token(token)
             if not code:
                 raise NotAuthorizedException()
-            async with client.transaction():
-                if code.reset_password:
+            if code.reset_password:
+                async with client.transaction():
                     await client.password.delete_by_email(code.email.id)
-                # await client.codes.delete_by_user_id(code.email.user_id)
+                    await client.refresh(code.email.user)
+                    await client.codes.delete_by_user_id(code.email.user_id)
         return AuthenticationResult(user=code.email.user, auth=code)
