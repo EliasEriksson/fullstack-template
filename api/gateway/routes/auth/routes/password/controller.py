@@ -25,7 +25,6 @@ from api.services.email import Email
 class Controller(LitestarController):
     path = "/password"
 
-    # TODO: can be created multiple times?
     @post(
         path="/",
         tags=["auth"],
