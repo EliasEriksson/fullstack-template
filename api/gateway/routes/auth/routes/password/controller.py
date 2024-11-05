@@ -51,7 +51,7 @@ class Controller(LitestarController):
         if isinstance(request.auth, schemas.Token):
             email = request.auth.subject
         else:
-            if not request.auth.reset_password:
+            if request.auth.reset_password and request.user.password:
                 raise NotAuthorizedException()
             email = request.auth.email.id
         async with Database() as client:
@@ -60,13 +60,21 @@ class Controller(LitestarController):
                     password = data.to_model()
                     password.user = request.user
                     await client.password.create(password)
-                    session = await client.sessions.fetch_by_connection(
-                        request.user, request.client.host, agent
-                    )
             except IntegrityError as error:
                 raise ClientException("Already have a password.") from error
             async with client.transaction():
-                session.refresh()
+                session = await client.sessions.fetch_by_connection(
+                    request.user, request.client.host, agent
+                )
+            async with client.transaction():
+                if not session:
+                    session = await client.sessions.create(
+                        models.Session(
+                            host=request.client.host, agent=agent, user=request.user
+                        )
+                    )
+                else:
+                    session.refresh()
             result = schemas.Token.create(
                 session,
                 email,

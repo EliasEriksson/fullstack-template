@@ -45,7 +45,5 @@ class Session(Base):
     )
 
     def refresh(self) -> Self:
-        self.expire = cast(
-            Mapped[datetime], datetime.now(tz=timezone.utc) + timedelta(days=30)
-        )
+        self.expire = datetime.now(tz=timezone.utc) + timedelta(days=30)
         return self
