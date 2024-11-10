@@ -1,0 +1,14 @@
+litestar
+click
+msgspec
+uvicorn
+sqlalchemy
+bcrypt
+xxhash
+alembic
+python-jose
+advanced_alchemy
+pytest
+pytest-asyncio
+psycopg
+black
