@@ -95,6 +95,7 @@ class Controller(LitestarController):
                 if not session:
                     raise ClientException()
             elif isinstance(request.auth, (models.Email, models.Code)):
+                # TODO the password is not properly deleted if PW reset OTAC is used.
                 async with client.transaction():
                     session = await client.sessions.create(
                         models.Session(
