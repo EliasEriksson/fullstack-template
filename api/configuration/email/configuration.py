@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from ..configuration import Configuration as Parent
 
 
+# TODO add support for sending DKIM signed emails using local SMTP server
 class Configuration:
     _configuration: Parent
     _environment: Environment
