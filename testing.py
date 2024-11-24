@@ -1,20 +1,29 @@
-from __future__ import annotations
-from typing import *
-from pydantic import BaseModel
-
-T = TypeVar("T")
-
-
-class Schema(BaseModel): ...
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from email.utils import formataddr
+from datetime import datetime
 
 
-class Result(Schema, Generic[T]):
-    result: T
+headers = {
+    "from": ("Fullstack", "no-reply@eliaseriksson.io"),
+    "to": [
+        ("Elias Eriksson", "eliaseriksson95@gmail.com"),
+    ],
+}
 
+mail = MIMEMultipart()
+mail["From"] = formataddr(("Fullstack", "no-reply@eliaseriksson.io"))
+mail["To"] = ", ".join([formataddr(("Elias Eriksson", "eliaseriksson95@gmail.com"))])
+mail["Date"] = formatdate(datetime.now().timestamp())
+mail["Subject"] = "Testing sending mail with python+postfix"
 
-class Email(Schema):
-    address: str
+mail.attach(MIMEText("Hello world!"))
 
-
-print(Result[Email](result={"address": "jessie@rocket.com"}).model_dump())
-#####################################################################
+with smtplib.SMTP("192.168.1.20", 587) as connection:
+    connection.starttls()
+    connection.sendmail(
+        headers["from"][1], [mail for name, mail in headers["to"]], mail.as_string()
+    )
+    connection.close()
